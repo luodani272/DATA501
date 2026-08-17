@@ -1,0 +1,7 @@
+useDynLib(cbfrdist, .registration=TRUE)
+export(dbfrdist)
+export(pbfrdist)
+export(qbfrdist)
+export(rbfrdist)
+importFrom(Rcpp, evalCpp)
+importFrom("stats", "pbeta", "runif")
