@@ -1,0 +1,8 @@
+Package: BFRdist
+Type: Package
+Title: BFR distribution
+Version: 0.1.0
+Imports: Rcpp
+LinkingTo: Rcpp (>= 0.12.0)
+RoxygenNote: 7.1.1
+NeedsCompilation: yes
