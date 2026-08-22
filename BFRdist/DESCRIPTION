@@ -2,7 +2,14 @@ Package: BFRdist
 Type: Package
 Title: BFR distribution
 Version: 0.1.0
-Imports: Rcpp
-LinkingTo: Rcpp (>= 0.12.0)
-RoxygenNote: 7.1.1
+Author: Daniel Luo and Jennifer Hanna
+Maintainer: Jennifer Hanna <jennifer.suzanne.hanna@gmail.com>
+Description: Captures the functionality of the BFR distribution, a novel, flexible distribution which is arctan-generated and defined on the unit interval for Generalized Radar Vegetation Index (GRVI) analysis.
+License: MIT + file LICENSE
+Imports: 
+    Rcpp,
+    stats
+LinkingTo: Rcpp 
 NeedsCompilation: yes
+Config/roxygen2/version: 8.0.0
+Encoding: UTF-8

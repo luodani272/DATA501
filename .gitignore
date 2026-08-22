@@ -1,0 +1,11 @@
+BFRdist/.Rhistory
+BFRdist/.Rdata
+BFRdist/BFRdist.Rproj
+BFRdist/src/*.o
+BFRdist/src/*.dll
+BFRdist/src/*.so
+BFRdist/src/*.dylib
+BFRdist/*.zip
+BFRdist/*.tar.gz
+BFRdist/.Rcheck/
+BFRdist/.Rproj.user/
