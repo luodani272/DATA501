@@ -33,17 +33,10 @@
 #' }
 #'
 #' @export
-plot_method <- function(data,
-                        alpha,
-                        beta,
-                        B = 1000,
-                        conf = c(0.90, 0.95),
-                        seed = NULL,
-                        show_observed = TRUE) {
+plot_method <- function(data, alpha, beta, B = 1000, conf = c(0.90, 0.95), seed = NULL, show_observed = TRUE) {
 
- 
+  ellipse_colours <- c("steelblue", "firebrick")
   # Input validation
- 
 
   if (!is.numeric(data)) {
     stop("'data' must be a numeric vector.")
@@ -198,7 +191,7 @@ plot_method <- function(data,
 
   covariance_valid <- (
     all(is.finite(covariance_matrix)) &&
-      determinant(covariance_matrix)$modulus > 0
+    det(covariance_matrix) > 0
   )
 
   # Determine plotting limits
@@ -254,69 +247,86 @@ plot_method <- function(data,
     main = "BFR Bootstrap SK_G x KU_M Plot"
   )
  
-  # Draw confidence ellipses
- 
-  if (covariance_valid) {
+# Draw confidence ellipses
 
-    eigen_result <- eigen(
-      covariance_matrix,
-      symmetric = TRUE
-    )
+if (covariance_valid) {
 
-    eigen_values <- eigen_result$values
-    eigen_vectors <- eigen_result$vectors
+  eigen_result <- eigen(
+    covariance_matrix,
+    symmetric = TRUE
+  )
 
-    theta <- seq(
-      0,
-      2 * pi,
-      length.out = 361
-    )
+  eigen_values <- eigen_result$values
+  eigen_vectors <- eigen_result$vectors
 
-    unit_circle <- rbind(
-      cos(theta),
-      sin(theta)
-    )
+  theta <- seq(
+    0,
+    2 * pi,
+    length.out = 361
+  )
 
-    # Draw ellipses from lowest to highest confidence level.
-    for (level in sort(conf)) {
+  unit_circle <- rbind(
+    cos(theta),
+    sin(theta)
+  )
 
-      # Radius corresponding to the confidence level
-      # of a bivariate normal distribution.
-      radius <- sqrt(
-        stats::qchisq(
-          level,
-          df = 2
-        )
-      )
+  # Sort confidence levels from lowest to highest
+  sorted_conf <- sort(conf)
 
-      ellipse <- eigen_vectors %*%
-        diag(sqrt(pmax(eigen_values, 0))) %*%
-        unit_circle * radius
-
-      ellipse[1, ] <- (
-        ellipse[1, ] +
-          bootstrap_mean["SK_G"]
-      )
-
-      ellipse[2, ] <- (
-        ellipse[2, ] +
-          bootstrap_mean["KU_M"]
-      )
-
-      graphics::lines(
-        ellipse[1, ],
-        ellipse[2, ],
-        lwd = 2
-      )
-    }
-
-  } else {
-
-    warning(
-      "The bootstrap covariance matrix is singular or invalid. ",
-      "Confidence ellipses could not be drawn."
+  # Make sure there is one colour for each ellipse
+  if (length(ellipse_colours) < length(sorted_conf)) {
+    ellipse_colours <- rep(
+      ellipse_colours,
+      length.out = length(sorted_conf)
     )
   }
+
+  # Draw each confidence ellipse
+  for (i in seq_along(sorted_conf)) {
+
+    level <- sorted_conf[i]
+
+    # Radius corresponding to the confidence level
+    # of a bivariate normal distribution.
+    radius <- sqrt(
+      stats::qchisq(
+        level,
+        df = 2
+      )
+    )
+
+    # Calculate ellipse
+    ellipse <- eigen_vectors %*%
+      diag(sqrt(pmax(eigen_values, 0))) %*%
+      unit_circle * radius
+
+    # Move ellipse to bootstrap centre
+    ellipse[1, ] <- (
+      ellipse[1, ] +
+        bootstrap_mean["SK_G"]
+    )
+
+    ellipse[2, ] <- (
+      ellipse[2, ] +
+        bootstrap_mean["KU_M"]
+    )
+
+    # Draw coloured ellipse
+    graphics::lines(
+      ellipse[1, ],
+      ellipse[2, ],
+      col = ellipse_colours[i],
+      lwd = 3
+    )
+  }
+
+} else {
+
+  warning(
+    "The bootstrap covariance matrix is singular or invalid. ",
+    "Confidence ellipses could not be drawn."
+  )
+}
  
   # Plot bootstrap centre
 
@@ -342,71 +352,92 @@ plot_method <- function(data,
     )
   }
 
-  # Legend
+# Legend
+
+legend_labels <- c(
+  "Bootstrap replications",
+  "Bootstrap centre"
+)
+
+legend_pch <- c(
+  16,
+  4
+)
+
+legend_lty <- c(
+  NA,
+  NA
+)
+
+legend_col <- c(
+  "black",
+  "black"
+)
+
+if (show_observed &&
+    is.finite(observed_sk) &&
+    is.finite(observed_ku)) {
 
   legend_labels <- c(
-    "Bootstrap replications",
-    "Bootstrap centre"
+    legend_labels,
+    "Observed statistic"
   )
 
   legend_pch <- c(
-    16,
-    4
+    legend_pch,
+    8
   )
 
   legend_lty <- c(
-    NA,
+    legend_lty,
     NA
   )
 
-  if (show_observed &&
-      is.finite(observed_sk) &&
-      is.finite(observed_ku)) {
-
-    legend_labels <- c(
-      legend_labels,
-      "Observed statistic"
-    )
-
-    legend_pch <- c(
-      legend_pch,
-      8
-    )
-
-    legend_lty <- c(
-      legend_lty,
-      NA
-    )
-  }
-
-  for (level in sort(conf)) {
-
-    legend_labels <- c(
-      legend_labels,
-      paste0(
-        level * 100,
-        "% confidence ellipse"
-      )
-    )
-
-    legend_pch <- c(
-      legend_pch,
-      NA
-    )
-
-    legend_lty <- c(
-      legend_lty,
-      1
-    )
-  }
-
-  graphics::legend(
-    "topright",
-    legend = legend_labels,
-    pch = legend_pch,
-    lty = legend_lty,
-    bty = "n"
+  legend_col <- c(
+    legend_col,
+    "black"
   )
+}
+
+sorted_conf <- sort(conf)
+
+for (i in seq_along(sorted_conf)) {
+
+  level <- sorted_conf[i]
+
+  legend_labels <- c(
+    legend_labels,
+    paste0(
+      level * 100,
+      "% confidence ellipse"
+    )
+  )
+
+  legend_pch <- c(
+    legend_pch,
+    NA
+  )
+
+  legend_lty <- c(
+    legend_lty,
+    1
+  )
+
+  legend_col <- c(
+    legend_col,
+    ellipse_colours[i]
+  )
+}
+
+graphics::legend(
+  "topright",
+  legend = legend_labels,
+  col = legend_col,
+  pch = legend_pch,
+  lty = legend_lty,
+  lwd = 3,
+  bty = "n"
+)
  
   # Return results invisibly
 
