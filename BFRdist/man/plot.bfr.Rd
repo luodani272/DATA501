@@ -7,6 +7,8 @@
 \method{plot}{bfr}(x, B = 1000, conf = c(0.9, 0.95), seed = NULL, show_observed = TRUE, ...)
 }
 \arguments{
+\item{x}{An object of class "bfr" (returned by fit_bfr).}
+
 \item{B}{The number of bootstrap replications. Default is 1000.}
 
 \item{conf}{A numeric vector containing the confidence levels for the
@@ -18,11 +20,7 @@ Default is NULL.}
 \item{show_observed}{Logical. If TRUE, the SK_G and KU_M values calculated
 from the original data are displayed on the plot. Default is TRUE.}
 
-\item{data}{A numeric vector of observations from the BFR distribution.}
-
-\item{alpha}{The alpha parameter of the BFR distribution.}
-
-\item{beta}{The beta parameter of the BFR distribution.}
+\item{...}{Additional arguments passed to the plotting function.}
 }
 \value{
 Invisibly returns a list containing the bootstrap statistics,
