@@ -1,0 +1,100 @@
+---
+title: "Introduction to BFRdist"
+author: "Daniel Luo and Jennifer Hanna"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Introduction to BFRdist}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+The `BFRdist` package provides computational tools and visualizations for the BFR distribution, a novel, flexible distribution defined on the unit interval (0, 1). It is primarily designed for the analysis of the Generalized Radar Vegetation Index (GRVI) from SAR data.
+
+This vignette demonstrates how to use the core distribution functions, fit empirical data, and visualize the results using the package's object-oriented S3 methods.
+
+## 1. Setup and Core Functions
+
+First, load the package:
+
+```{r load-lib}
+library(BFRdist)
+```
+
+The package implements the standard suite of `d/p/q/r` functions for the BFR distribution. You can calculate the density (`dbfr`), cumulative probability (`pbfr`), and quantiles (`qbfr`), or generate random deviates (`rbfr`).
+
+```{r core-functions}
+# Set shape parameters
+alpha_val <- 1.5
+beta_val <- 2.0
+
+# Calculate the density at x = 0.5
+dbfr(0.5, alpha = alpha_val, beta = beta_val)
+
+# Calculate the cumulative probability up to q = 0.5
+pbfr(0.5, alpha = alpha_val, beta = beta_val)
+
+# Find the 50th percentile (median)
+qbfr(0.5, alpha = alpha_val, beta = beta_val)
+```
+
+## 2. Generating Data and Calculating Summary Statistics
+
+Because the BFR distribution operates on the unit interval, all observations must strictly be between 0 and 1. We can simulate a synthetic GRVI dataset using `rbfr()` and calculate its Galton Skewness and Moors Kurtosis.
+
+```{r simulate-data}
+set.seed(123)
+
+# Generate 500 random observations
+synthetic_grvi <- rbfr(n = 500, alpha = 2.0, beta = 3.5)
+
+# Calculate summary statistics
+galton_skewness(synthetic_grvi)
+moors_kurtosis(synthetic_grvi)
+```
+
+## 3. Fitting the BFR Distribution
+
+To estimate the alpha and beta parameters from your data, use the `fit_bfr()` function. This function uses a fast, compiled C++ backend to generate initial quantile-based estimates before applying Maximum Likelihood Estimation (MLE) or the Method of Moments (MME). 
+
+The function returns an object of class `bfr`.
+
+```{r fitting}
+# Fit the data using Maximum Likelihood
+bfr_model <- fit_bfr(synthetic_grvi, method = "mle")
+```
+
+## 4. Exploring the Fitted Model (S3 Methods)
+
+The `BFRdist` package includes custom S3 methods to easily extract metrics, simulate new data, and visualize your fitted `bfr` object.
+
+### Print and Summary
+The `print()` method outputs the basic parameter estimates, while `summary()` provides standard errors and goodness-of-fit metrics (Log-Likelihood, AIC, and BIC).
+
+```{r summary-methods}
+print(bfr_model)
+
+summary(bfr_model)
+```
+
+### Predict
+You can simulate new observations based on your fitted model using the `predict()` method.
+
+```{r predict-method}
+# Simulate 5 new predictions
+predict(bfr_model, n.ahead = 5)
+```
+
+### Plotting
+The `plot()` method generates a Pearson/Cullen Frey-like diagram using `ggplot2`, leveraging the Galton skewness and Moors kurtosis to evaluate the fit.
+
+```{r plot-method, fig.width=7, fig.height=5}
+# Generate the diagnostic plot
+plot(bfr_model)
+```

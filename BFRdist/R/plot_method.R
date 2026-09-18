@@ -32,9 +32,15 @@
 #' )
 #' }
 #'
+#' @method plot bfr
 #' @export
-plot_method <- function(data, alpha, beta, B = 1000, conf = c(0.90, 0.95), seed = NULL, show_observed = TRUE) {
-
+plot.bfr <- function(x, B = 1000, conf = c(0.90, 0.95), seed = NULL, show_observed = TRUE, ...) {
+  
+  # Extract data and parameters from the fitted bfr list object
+  data <- x$data
+  alpha <- x$estimate["alpha"] 
+  beta <- x$estimate["beta"]
+  
   ellipse_colours <- c("steelblue", "firebrick")
   # Input validation
 
