@@ -73,6 +73,6 @@ print(r_data)
 x_seq <- seq(0.01, 0.99, length.out = 100)
 y_dens <- dbfr(x_seq, alpha = alpha_val, beta = beta_val)
 plot(x_seq, y_dens, type = "l", col = "blue", lwd = 2,
-     main = "BFR Density (\u03b1=1.5, \u03b2=2)",
+     main = "BFR Density (alpha=1.5, beta=2)",
      xlab = "x", ylab = "Density")
 }

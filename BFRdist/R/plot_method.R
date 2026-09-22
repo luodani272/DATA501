@@ -4,9 +4,7 @@
 #' and Moors kurtosis (KU_M) for the BFR distribution and plots the
 #' bootstrap replications together with confidence ellipses.
 #'
-#' @param data A numeric vector of observations from the BFR distribution.
-#' @param alpha The alpha parameter of the BFR distribution.
-#' @param beta The beta parameter of the BFR distribution.
+#' @param x An object of class "bfr" (returned by fit_bfr).
 #' @param B The number of bootstrap replications. Default is 1000.
 #' @param conf A numeric vector containing the confidence levels for the
 #'   confidence ellipses. Default is c(0.90, 0.95).
@@ -14,6 +12,7 @@
 #'   Default is NULL.
 #' @param show_observed Logical. If TRUE, the SK_G and KU_M values calculated
 #'   from the original data are displayed on the plot. Default is TRUE.
+#' @param ... Additional arguments passed to the plotting function.
 #'
 #' @return Invisibly returns a list containing the bootstrap statistics,
 #'   observed statistics, bootstrap centre, confidence levels, parameters,
@@ -32,9 +31,15 @@
 #' )
 #' }
 #'
+#' @method plot bfr
 #' @export
-plot_method <- function(data, alpha, beta, B = 1000, conf = c(0.90, 0.95), seed = NULL, show_observed = TRUE) {
-
+plot.bfr <- function(x, B = 1000, conf = c(0.90, 0.95), seed = NULL, show_observed = TRUE, ...) {
+  
+  # Extract data and parameters from the fitted bfr list object
+  data <- x$data
+  alpha <- x$estimate["alpha"] 
+  beta <- x$estimate["beta"]
+  
   ellipse_colours <- c("steelblue", "firebrick")
   # Input validation
 
