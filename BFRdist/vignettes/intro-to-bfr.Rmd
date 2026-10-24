@@ -40,7 +40,7 @@ $$f_{BFR}(x;\alpha,\beta)=\frac{2\beta}{\pi}\cdot\frac{\alpha^{\beta}x^{\beta-1}
 where $\alpha>0$ and $\beta>0$.
 
 **Cumulative Distribution Function (CDF)**
-$$F_{BFR}(q;\alpha,\beta)=\frac{2}{\pi}\arctan\left(\left(\frac{\alpha q}{1-q}\right)^\beta\right)$$
+$$F_{BFR}(q;\alpha,\beta)=\frac{2}{\pi}\arctan\left(\left(\frac{\alpha q}{1-q}\right)^\beta\right)1_{(0,1)}(q)$$
 for $0<q<1$.
 
 **Quantile Function**
@@ -49,9 +49,18 @@ where $\alpha>0$ and $\beta>0$.
 
 ## 2. Setup and Core Functions
 
-First, load the package:
+First, install the package from GitHub:
+
+```{r install, eval = FALSE}
+# Install BFRdist using pak
+options(pkg.build_vignettes = TRUE)
+pak::pak("luodani272/DATA501")
+```
+
+Then load the package into your session:
 
 ```{r load-lib}
+# Load BFRdist 
 library(BFRdist)
 ```
 
@@ -118,7 +127,7 @@ predict(bfr_model, n.ahead = 5)
 ```
 
 ### Plotting
-The `plot.bfr` method generates Pearson-like SK_G/KU_M diagrams automatically using `ggplot2`. This diagram classifies models using order statistic-based measures of skewness (Galton's skewness, SK_G) and kurtosis (Moors' kurtosis, KU_M) rather than sample moments, extending the classification to distributions whose moments may not exist.
+The `plot.bfr` method generates Pearson-like SK_G/KU_M diagrams automatically using base R graphics. This diagram classifies models using order statistic-based measures of skewness (Galton's skewness, SK_G) and kurtosis (Moors' kurtosis, KU_M) rather than sample moments, extending the classification to distributions whose moments may not exist.
 
 ```{r plot-method, fig.width=7, fig.height=5}
 # Generate the diagnostic SK_G x KU_M plot

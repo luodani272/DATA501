@@ -1,7 +1,7 @@
 #' The BFR Distribution
 #'
 #' Density, distribution function, quantile function, and random generation
-#' for the BFR distribution with parameters `alpha` and `beta`.
+#' for the BFR distribution with shape parameters \code{alpha} and \code{beta}.
 #'
 #' @details
 #' The BFR distribution with shape parameters \eqn{\alpha > 0} and \eqn{\beta > 0} 
@@ -16,21 +16,22 @@
 #' \deqn{Q(p) = \left( 1 + \alpha \left( \tan\left(\frac{\pi p}{2}\right) \right)^{-1/\beta} \right)^{-1}}
 #' 
 #' @useDynLib BFRdist, .registration = TRUE
+#' @import Rcpp
 #'
 #' @param x,q vector of quantiles (values must be between 0 and 1).
 #' @param p vector of probabilities (values must be between 0 and 1).
-#' @param n number of observations. If `length(n) > 1`, the length is taken to be the number required.
-#' @param alpha positive shape parameter.
-#' @param beta positive shape parameter.
+#' @param n number of observations. If \code{length(n) > 1}, the length is taken to be the number required.
+#' @param alpha vector of positive shape parameters.
+#' @param beta vector of positive shape parameters.
 #' 
 #' @return 
-#' `dbfr` gives the density, `pbfr` gives the distribution function (CDF), 
-#' `qbfr` gives the quantile function, and `rbfr` generates random deviates.
+#' \code{dbfr} gives the density, \code{pbfr} gives the distribution function (CDF), 
+#' \code{qbfr} gives the quantile function, and \code{rbfr} generates random deviates.
 #' 
-#' The length of the result is determined by `n` for `rbfr`, and is the maximum 
-#' of the lengths of the numerical arguments for the other functions.
-#' 
-#' @import Rcpp
+#' The length of the result is determined by \code{n} for \code{rbfr}, and is the maximum 
+#' of the lengths of the numerical arguments for the other functions. The numerical arguments 
+#' are recycled to the length of the result.
+#'
 #' @name BFRdist
 #' 
 #' @examples
@@ -64,30 +65,31 @@ NULL
 #' @export
 dbfr <- function(x, alpha, beta) {
   if (any(alpha <= 0) || any(beta <= 0)) stop("alpha and beta must be positive.")
+  if (any(is.na(x)) || any(is.infinite(x))) stop("NA and Inf values are not permitted.")
+  if (any(x <= 0) || any(x >= 1)) stop("All input data must be strictly greater than 0 and less than 1.")
   
-  # The PDF is only defined for 0 < x < 1
-  ifelse(x > 0 & x < 1,
-         (2 * beta / pi) * ((alpha^beta * x^(beta - 1) * (1 - x)^(beta - 1)) / 
-                              (alpha^(2 * beta) * x^(2 * beta) + (1 - x)^(2 * beta))),
-         0)
+  # PDF calculation
+  (2 * beta / pi) * ((alpha^beta * x^(beta - 1) * (1 - x)^(beta - 1)) / 
+                       (alpha^(2 * beta) * x^(2 * beta) + (1 - x)^(2 * beta)))
 }
 
 #' @rdname BFRdist
 #' @export
 pbfr <- function(q, alpha, beta) {
   if (any(alpha <= 0) || any(beta <= 0)) stop("alpha and beta must be positive.")
+  if (any(is.na(q)) || any(is.infinite(q))) stop("NA and Inf values are not permitted.")
+  if (any(q <= 0) || any(q >= 1)) stop("All input data must be strictly greater than 0 and less than 1.")
   
-  # The CDF is 0 for x <= 0 and 1 for x >= 1
-  ifelse(q <= 0, 0,
-         ifelse(q >= 1, 1,
-                (2 / pi) * atan(((alpha * q) / (1 - q))^beta)))
+  # CDF calculation
+  (2 / pi) * atan(((alpha * q) / (1 - q))^beta)
 }
 
 #' @rdname BFRdist
 #' @export
 qbfr <- function(p, alpha, beta) {
   if (any(alpha <= 0) || any(beta <= 0)) stop("alpha and beta must be positive.")
-  if (any(p < 0 | p > 1, na.rm = TRUE)) stop("Probabilities p must be between 0 and 1.")
+  if (any(is.na(p)) || any(is.infinite(p))) stop("NA and Inf values are not permitted.")
+  if (any(p <= 0) || any(p >= 1)) stop("Probabilities p must be strictly greater than 0 and less than 1.")
   
   # Quantile function
   (1 + alpha * (tan(pi * p / 2))^(-1 / beta))^(-1)
@@ -97,6 +99,8 @@ qbfr <- function(p, alpha, beta) {
 #' @export
 rbfr <- function(n, alpha, beta) {
   if (any(alpha <= 0) || any(beta <= 0)) stop("alpha and beta must be positive.")
+  
+  if (length(n) > 1) n <- length(n)
   
   # Random generation using the inverse transform method
   u <- stats::runif(n)

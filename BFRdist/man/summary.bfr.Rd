@@ -7,13 +7,50 @@
 \method{summary}{bfr}(object, ...)
 }
 \arguments{
-\item{object}{An object of class "bfr".}
+\item{object}{An object of S3 class \code{bfr}, typically the result of \code{fit_bfr}.}
 
-\item{...}{Additional arguments affecting the summary produced.}
+\item{...}{Additional arguments affecting the summary produced. (Currently unused).}
 }
 \value{
-An object of class "summary.bfr".
+An S3 object of class \code{summary.bfr} containing:
+\itemize{
+  \item \code{estimate}: The fitted shape parameters (\code{alpha} and \code{beta}).
+  \item \code{se}: The standard errors of the estimates (for MLE fits).
+  \item \code{method}: The estimation method used.
+  \item \code{loglik}: The Log-Likelihood of the fitted model.
+  \item \code{aic}: The Akaike Information Criterion.
+  \item \code{bic}: The Bayesian Information Criterion.
+  \item \code{n}: The number of observations in the data.
+}
 }
 \description{
-Outputs standard errors and goodness-of-fit metrics for a fitted BFR object.
+Calculates and outputs standard errors and goodness-of-fit metrics 
+for a fitted BFR model.
+}
+\details{
+This function is an S3 method for objects of class \code{bfr}. It calculates 
+goodness-of-fit metrics including the Log-Likelihood, Akaike Information Criterion (AIC), 
+and Bayesian Information Criterion (BIC). For models fitted using 
+Maximum Likelihood Estimation (MLE), it also approximates the standard errors 
+of the parameter estimates by numerically computing and inverting the Hessian matrix.
+}
+\examples{
+\donttest{
+# 1. Generate synthetic data
+set.seed(123)
+raw_data <- rbfr(n = 100, alpha = 1.5, beta = 2.5)
+
+# 2. Fit the BFR model to the data using MLE
+bfr_model <- fit_bfr(raw_data, method = "mle")
+
+# 3. Generate the summary statistics
+model_summary <- summary(bfr_model)
+
+# The print method is called automatically when typing the object name:
+model_summary
+}
+
+}
+\seealso{
+\code{\link{fit_bfr}} for model fitting, and \code{\link{print.summary.bfr}} for the print method.
 }

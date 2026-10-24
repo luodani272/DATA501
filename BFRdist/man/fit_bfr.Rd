@@ -7,14 +7,49 @@
 fit_bfr(x, method = c("mle", "mme"))
 }
 \arguments{
-\item{x}{A numeric vector of observations strictly between 0 and 1.}
+\item{x}{A numeric vector of observations. Values must be strictly greater than 0 and less than 1. Missing (\code{NA}) and infinite values are not permitted.}
 
-\item{method}{A character string specifying the estimation method: "mle" or "mme".}
+\item{method}{A character string specifying the estimation method. Options are \code{"mle"} (Maximum Likelihood) or \code{"mme"} (Method of Moments).}
 }
 \value{
-An object of S3 class \code{bfr}.
+An S3 object of class \code{bfr} containing the following components:
+\itemize{
+  \item \code{estimate}: A named numeric vector containing the fitted \code{alpha} and \code{beta} parameters.
+  \item \code{method}: The estimation method used (\code{"mle"} or \code{"mme"}).
+  \item \code{data}: The original numeric vector of data used for fitting.
+  \item \code{optim_results}: The complete output list from the internal \code{stats::optim()} call.
+}
 }
 \description{
-Estimates parameters of the BFR distribution using Maximum Likelihood (mle) 
-or Method of Moments (mme).
+Estimates the shape parameters (\code{alpha} and \code{beta}) of the BFR distribution 
+from empirical data (such as Generalized Radar Vegetation Index datasets) using 
+Maximum Likelihood Estimation (MLE) or the Method of Moments (MME).
+}
+\details{
+Because the BFR distribution is bounded on the unit interval, all input data 
+must be strictly between 0 and 1. 
+
+The estimation process utilizes a two-step approach:
+1. Initial parameter estimates are computed quickly using a C++ implementation of 
+   the quantile-based estimator.
+2. These initial values are passed into \code{stats::optim()} using the "L-BFGS-B" 
+   algorithm to refine the estimates via either Maximum Likelihood (MLE) or 
+   the Method of Moments (MME).
+}
+\examples{
+# 1. Generate synthetic BFR data (e.g., simulating GRVI observations)
+set.seed(42)
+simulated_data <- rbfr(n = 200, alpha = 2, beta = 3)
+
+# 2. Fit the data using Maximum Likelihood Estimation (MLE)
+fit_ml <- fit_bfr(simulated_data, method = "mle")
+print(fit_ml$estimate)
+
+# 3. Fit the data using the Method of Moments (MME)
+fit_moments <- fit_bfr(simulated_data, method = "mme")
+print(fit_moments$estimate)
+
+}
+\seealso{
+\code{\link{BFRdist}} for the core distribution functions.
 }

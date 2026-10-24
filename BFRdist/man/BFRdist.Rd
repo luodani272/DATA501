@@ -19,24 +19,25 @@ rbfr(n, alpha, beta)
 \arguments{
 \item{x, q}{vector of quantiles (values must be between 0 and 1).}
 
-\item{alpha}{positive shape parameter.}
+\item{alpha}{vector of positive shape parameters.}
 
-\item{beta}{positive shape parameter.}
+\item{beta}{vector of positive shape parameters.}
 
 \item{p}{vector of probabilities (values must be between 0 and 1).}
 
-\item{n}{number of observations. If `length(n) > 1`, the length is taken to be the number required.}
+\item{n}{number of observations. If \code{length(n) > 1}, the length is taken to be the number required.}
 }
 \value{
-`dbfr` gives the density, `pbfr` gives the distribution function (CDF), 
-`qbfr` gives the quantile function, and `rbfr` generates random deviates.
+\code{dbfr} gives the density, \code{pbfr} gives the distribution function (CDF), 
+\code{qbfr} gives the quantile function, and \code{rbfr} generates random deviates.
 
-The length of the result is determined by `n` for `rbfr`, and is the maximum 
-of the lengths of the numerical arguments for the other functions.
+The length of the result is determined by \code{n} for \code{rbfr}, and is the maximum 
+of the lengths of the numerical arguments for the other functions. The numerical arguments 
+are recycled to the length of the result.
 }
 \description{
 Density, distribution function, quantile function, and random generation
-for the BFR distribution with parameters `alpha` and `beta`.
+for the BFR distribution with shape parameters \code{alpha} and \code{beta}.
 }
 \details{
 The BFR distribution with shape parameters \eqn{\alpha > 0} and \eqn{\beta > 0} 
