@@ -33,13 +33,13 @@ test_that("MLE recovers known BFR parameters", {
 
   # Check that estimates are reasonably close to the true values
   expect_equal(
-    fit$estimate["alpha"],
+    fit$estimate[["alpha"]],
     alpha_true,
     tolerance = 0.15
   )
 
   expect_equal(
-    fit$estimate["beta"],
+    fit$estimate[["beta"]],
     beta_true,
     tolerance = 0.15
   )

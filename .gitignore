@@ -9,3 +9,4 @@ BFRdist/*.zip
 BFRdist/*.tar.gz
 BFRdist/.Rcheck/
 BFRdist/.Rproj.user/
+.Rproj.user
