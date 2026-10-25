@@ -358,7 +358,8 @@ if (covariance_valid) {
       observed_ku,
       pch = 8,
       cex = 1.5,
-      lwd = 2
+      lwd = 2,
+      col = "red"
     )
   }
 
@@ -404,7 +405,7 @@ if (show_observed &&
 
   legend_col <- c(
     legend_col,
-    "black"
+    "red"
   )
 }
 
