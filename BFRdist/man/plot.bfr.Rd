@@ -2,25 +2,25 @@
 % Please edit documentation in R/plot_method.R
 \name{plot.bfr}
 \alias{plot.bfr}
-\title{SK_G x KU_M Bootstrap Plot}
+\title{Generate a Pearson-Like Distributional Diagram for BFR Fits}
 \usage{
 \method{plot}{bfr}(x, B = 1000, conf = c(0.9, 0.95), seed = NULL, show_observed = TRUE, ...)
 }
 \arguments{
-\item{x}{An object of class "bfr" (returned by fit_bfr).}
+\item{x}{An object of S3 class \code{bfr} (returned by \code{fit_bfr}).}
 
-\item{B}{The number of bootstrap replications. Default is 1000.}
+\item{B}{The number of parametric bootstrap replications. Default is 1000.}
 
 \item{conf}{A numeric vector containing the confidence levels for the
-confidence ellipses. Default is c(0.90, 0.95).}
+confidence ellipses. Default is \code{c(0.90, 0.95)}.}
 
-\item{seed}{An optional numeric value used to set the random seed.
-Default is NULL.}
+\item{seed}{An optional numeric value used to set the random seed for reproducible bootstrapping.
+Default is \code{NULL}.}
 
-\item{show_observed}{Logical. If TRUE, the SK_G and KU_M values calculated
-from the original data are displayed on the plot. Default is TRUE.}
+\item{show_observed}{Logical. If \code{TRUE}, the SK_G and KU_M values calculated
+from the original empirical data are displayed on the plot. Default is \code{TRUE}.}
 
-\item{...}{Additional arguments passed to the plotting function.}
+\item{...}{Additional arguments passed to the underlying base \code{graphics::plot} function.}
 }
 \value{
 Invisibly returns a list containing the bootstrap statistics,
@@ -28,21 +28,36 @@ Invisibly returns a list containing the bootstrap statistics,
   and bootstrap sample information.
 }
 \description{
-Generates a parametric bootstrap distribution of Galton skewness (SK_G)
-and Moors kurtosis (KU_M) for the BFR distribution and plots the
-bootstrap replications together with confidence ellipses.
+Generates a parametric bootstrap distribution of Galton's skewness (SK_G)
+and Moors' kurtosis (KU_M) for a fitted BFR distribution, plotting the
+bootstrap replications alongside confidence ellipses.
+}
+\details{
+This function generates a Pearson-like diagram for continuous double-bounded data. 
+Rather than relying on traditional sample moments, which can be sensitive to outliers, 
+this geometric representation classifies distributions using order statistic-based measures. 
+
+Specifically, it plots Galton's measure of skewness (SK_G) against Moors' measure of kurtosis (KU_M). 
+This visual framework is highly useful for tracking structural or phenological changes in 
+bounded features, such as the Generalized Radar Vegetation Index (GRVI).
+
+Because the BFR distribution relies on the unit interval, the underlying data inside 
+the \code{bfr} object must be strictly greater than 0 and less than 1.
 }
 \examples{
-\dontrun{
-x <- rbfr(100, alpha = 2, beta = 3)
+\donttest{
+# 1. Generate synthetic BFR data
+set.seed(42)
+simulated_data <- rbfr(n = 200, alpha = 2, beta = 3)
 
-plot_method(
-  data = x,
-  alpha = 2,
-  beta = 3,
-  B = 1000,
-  seed = 123
-)
+# 2. Fit the model to create a 'bfr' object
+bfr_fit <- fit_bfr(simulated_data, method = "mle")
+
+# 3. Generate the Pearson-like SK_G x KU_M diagram
+plot(bfr_fit, B = 500, conf = c(0.90, 0.95), seed = 123)
 }
 
+}
+\seealso{
+\code{\link{fit_bfr}} for generating the required \code{bfr} object.
 }

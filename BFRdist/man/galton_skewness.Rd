@@ -9,12 +9,32 @@ galton_skewness(x, na.rm = FALSE)
 \arguments{
 \item{x}{A numeric vector of observations.}
 
-\item{na.rm}{Logical. Should missing values be removed? Default is FALSE.}
+\item{na.rm}{Logical. Should missing values be removed before computation? Default is \code{FALSE}.}
 }
 \value{
-The Galton skewness value as a numeric. Returns NA if the 
-  interquartile range is zero.
+A numeric value representing the Galton skewness. Returns \code{NA_real_} 
+  with a warning if the interquartile range (the denominator) is zero.
 }
 \description{
-Calculates the Galton skewness (Bowley's skewness) for a numeric vector.
+Calculates Galton's measure of skewness (also known as Bowley's skewness) 
+for a numeric vector based on sample quartiles.
+}
+\details{
+Galton's skewness is an order statistic-based measure of asymmetry. 
+Unlike traditional skewness metrics that rely on the second and third central moments, 
+Galton's skewness depends solely on the first, second (median), and third quartiles. 
+This makes it significantly more robust to outliers and applicable to distributions 
+where theoretical moments may not exist. 
+
+By default, this function computes sample quantiles using R's default Type 7 algorithm.
+}
+\examples{
+set.seed(42)
+data <- rnorm(100, mean = 0, sd = 1)
+galton_skewness(data)
+
+}
+\seealso{
+\code{\link{moors_kurtosis}} for the complementary kurtosis measure, 
+  and \code{\link{plot.bfr}} for their application in distributional diagrams.
 }

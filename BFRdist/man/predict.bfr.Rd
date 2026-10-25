@@ -2,20 +2,46 @@
 % Please edit documentation in R/predict_method.R
 \name{predict.bfr}
 \alias{predict.bfr}
-\title{Predict Method for BFR Model Fits}
+\title{Simulate New Predictions from a Fitted BFR Model}
 \usage{
 \method{predict}{bfr}(object, n.ahead = 1, ...)
 }
 \arguments{
-\item{object}{An object of class "bfr".}
+\item{object}{An object of S3 class \code{bfr}, typically the result of a call to \code{fit_bfr}.}
 
-\item{n.ahead}{Integer. The number of new observations to simulate. Default is 1.}
+\item{n.ahead}{A single positive integer specifying the number of new observations to simulate. Default is 1.}
 
-\item{...}{Additional arguments.}
+\item{...}{Additional arguments passed to or from other methods. (Currently unused).}
 }
 \value{
-A numeric vector of simulated values from the fitted BFR distribution.
+A numeric vector of length \code{n.ahead} containing simulated values from the fitted BFR distribution.
 }
 \description{
-Simulates new predictions based on the fitted BFR model.
+An S3 method that simulates new observations based on the estimated 
+shape parameters of a fitted BFR model.
+}
+\details{
+This function leverages the random generation utility (\code{rbfr}) to 
+simulate new predictions from the fitted model. Because the BFR 
+distribution is explicitly designed for double-bounded data such as the 
+Generalized Radar Vegetation Index (GRVI), all simulated predictions will 
+strictly fall within the unit interval (0, 1).
+}
+\examples{
+\donttest{
+# 1. Generate synthetic GRVI-like data
+set.seed(123)
+raw_data <- rbfr(n = 100, alpha = 1.5, beta = 2.5)
+
+# 2. Fit the BFR model to the data
+bfr_model <- fit_bfr(raw_data, method = "mle")
+
+# 3. Simulate 5 new predictions based on the fitted parameters
+new_predictions <- predict(bfr_model, n.ahead = 5)
+print(new_predictions)
+}
+
+}
+\seealso{
+\code{\link{fit_bfr}} for fitting the model, and \code{\link{BFRdist}} for the underlying random generation function.
 }

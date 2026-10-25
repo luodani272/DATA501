@@ -1,38 +1,53 @@
-#' SK_G x KU_M Bootstrap Plot
+#' Generate a Pearson-Like Distributional Diagram for BFR Fits
 #'
-#' Generates a parametric bootstrap distribution of Galton skewness (SK_G)
-#' and Moors kurtosis (KU_M) for the BFR distribution and plots the
-#' bootstrap replications together with confidence ellipses.
+#' Generates a parametric bootstrap distribution of Galton's skewness (SK_G)
+#' and Moors' kurtosis (KU_M) for a fitted BFR distribution, plotting the
+#' bootstrap replications alongside confidence ellipses.
 #'
-#' @param x An object of class "bfr" (returned by fit_bfr).
-#' @param B The number of bootstrap replications. Default is 1000.
+#' @details
+#' This function generates a Pearson-like diagram for continuous double-bounded data. 
+#' Rather than relying on traditional sample moments, which can be sensitive to outliers, 
+#' this geometric representation classifies distributions using order statistic-based measures. 
+#' 
+#' Specifically, it plots Galton's measure of skewness (SK_G) against Moors' measure of kurtosis (KU_M). 
+#' This visual framework is highly useful for tracking structural or phenological changes in 
+#' bounded features, such as the Generalized Radar Vegetation Index (GRVI).
+#' 
+#' Because the BFR distribution relies on the unit interval, the underlying data inside 
+#' the \code{bfr} object must be strictly greater than 0 and less than 1.
+#'
+#' @param x An object of S3 class \code{bfr} (returned by \code{fit_bfr}).
+#' @param B The number of parametric bootstrap replications. Default is 1000.
 #' @param conf A numeric vector containing the confidence levels for the
-#'   confidence ellipses. Default is c(0.90, 0.95).
-#' @param seed An optional numeric value used to set the random seed.
-#'   Default is NULL.
-#' @param show_observed Logical. If TRUE, the SK_G and KU_M values calculated
-#'   from the original data are displayed on the plot. Default is TRUE.
-#' @param ... Additional arguments passed to the plotting function.
+#'   confidence ellipses. Default is \code{c(0.90, 0.95)}.
+#' @param seed An optional numeric value used to set the random seed for reproducible bootstrapping.
+#'   Default is \code{NULL}.
+#' @param show_observed Logical. If \code{TRUE}, the SK_G and KU_M values calculated
+#'   from the original empirical data are displayed on the plot. Default is \code{TRUE}.
+#' @param ... Additional arguments passed to the underlying base \code{graphics::plot} function.
 #'
 #' @return Invisibly returns a list containing the bootstrap statistics,
 #'   observed statistics, bootstrap centre, confidence levels, parameters,
 #'   and bootstrap sample information.
 #'
-#' @examples
-#' \dontrun{
-#' x <- rbfr(100, alpha = 2, beta = 3)
+#' @seealso \code{\link{fit_bfr}} for generating the required \code{bfr} object.
 #'
-#' plot_method(
-#'   data = x,
-#'   alpha = 2,
-#'   beta = 3,
-#'   B = 1000,
-#'   seed = 123
-#' )
+#' @examples
+#' \donttest{
+#' # 1. Generate synthetic BFR data
+#' set.seed(42)
+#' simulated_data <- rbfr(n = 200, alpha = 2, beta = 3)
+#'
+#' # 2. Fit the model to create a 'bfr' object
+#' bfr_fit <- fit_bfr(simulated_data, method = "mle")
+#'
+#' # 3. Generate the Pearson-like SK_G x KU_M diagram
+#' plot(bfr_fit, B = 500, conf = c(0.90, 0.95), seed = 123)
 #' }
 #'
 #' @method plot bfr
 #' @export
+#' 
 plot.bfr <- function(x, B = 1000, conf = c(0.90, 0.95), seed = NULL, show_observed = TRUE, ...) {
   
   # Extract data and parameters from the fitted bfr list object
@@ -41,8 +56,8 @@ plot.bfr <- function(x, B = 1000, conf = c(0.90, 0.95), seed = NULL, show_observ
   beta <- x$estimate["beta"]
   
   ellipse_colours <- c("steelblue", "firebrick")
-  # Input validation
 
+  # Input validation
   if (!is.numeric(data)) {
     stop("'data' must be a numeric vector.")
   }
@@ -103,7 +118,6 @@ plot.bfr <- function(x, B = 1000, conf = c(0.90, 0.95), seed = NULL, show_observ
   conf <- unique(conf)
 
   # Generate parametric bootstrap samples
-
   n <- length(data)
 
   bootstrap_stats <- matrix(
@@ -149,7 +163,7 @@ plot.bfr <- function(x, B = 1000, conf = c(0.90, 0.95), seed = NULL, show_observ
 
   bootstrap_stats <- as.data.frame(bootstrap_stats)
 
-  # Remove unsuccessful replications.
+  # Remove unsuccessful replications
   bootstrap_stats <- bootstrap_stats[
     is.finite(bootstrap_stats$SK_G) &
       is.finite(bootstrap_stats$KU_M),
@@ -165,7 +179,6 @@ plot.bfr <- function(x, B = 1000, conf = c(0.90, 0.95), seed = NULL, show_observ
   }
  
   # Calculate statistics from the original data
- 
   observed_sk <- galton_skewness(
     data,
     na.rm = TRUE
@@ -177,7 +190,6 @@ plot.bfr <- function(x, B = 1000, conf = c(0.90, 0.95), seed = NULL, show_observ
   )
 
   # Calculate bootstrap centre
- 
   bootstrap_mean <- c(
     mean(bootstrap_stats$SK_G),
     mean(bootstrap_stats$KU_M)
@@ -189,7 +201,6 @@ plot.bfr <- function(x, B = 1000, conf = c(0.90, 0.95), seed = NULL, show_observ
   )
  
   # Calculate covariance matrix
-
   covariance_matrix <- stats::cov(
     bootstrap_stats[, c("SK_G", "KU_M")]
   )
@@ -200,7 +211,6 @@ plot.bfr <- function(x, B = 1000, conf = c(0.90, 0.95), seed = NULL, show_observ
   )
 
   # Determine plotting limits
-
   plot_x <- bootstrap_stats$SK_G
   plot_y <- bootstrap_stats$KU_M
 
@@ -219,7 +229,6 @@ plot.bfr <- function(x, B = 1000, conf = c(0.90, 0.95), seed = NULL, show_observ
   y_padding <- diff(y_range) * 0.10
 
   # Prevent zero-width plotting ranges.
-
   if (x_padding == 0) {
     x_padding <- 0.1
   }
@@ -239,7 +248,6 @@ plot.bfr <- function(x, B = 1000, conf = c(0.90, 0.95), seed = NULL, show_observ
   ) 
 
   # Create the SK_G x KU_M plot
- 
   graphics::plot(
     bootstrap_stats$SK_G,
     bootstrap_stats$KU_M,
@@ -253,7 +261,6 @@ plot.bfr <- function(x, B = 1000, conf = c(0.90, 0.95), seed = NULL, show_observ
   )
  
 # Draw confidence ellipses
-
 if (covariance_valid) {
 
   eigen_result <- eigen(
@@ -288,7 +295,6 @@ if (covariance_valid) {
 
   # Draw each confidence ellipse
   for (i in seq_along(sorted_conf)) {
-
     level <- sorted_conf[i]
 
     # Radius corresponding to the confidence level
@@ -343,7 +349,6 @@ if (covariance_valid) {
     lwd = 2
   ) 
   # Plot observed statistics
-
   if (show_observed &&
       is.finite(observed_sk) &&
       is.finite(observed_ku)) {
@@ -353,12 +358,12 @@ if (covariance_valid) {
       observed_ku,
       pch = 8,
       cex = 1.5,
-      lwd = 2
+      lwd = 2,
+      col = "red"
     )
   }
 
 # Legend
-
 legend_labels <- c(
   "Bootstrap replications",
   "Bootstrap centre"
@@ -400,7 +405,7 @@ if (show_observed &&
 
   legend_col <- c(
     legend_col,
-    "black"
+    "red"
   )
 }
 
@@ -445,7 +450,6 @@ graphics::legend(
 )
  
   # Return results invisibly
-
   invisible(
     list(
       bootstrap = bootstrap_stats,

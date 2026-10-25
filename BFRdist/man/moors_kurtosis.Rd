@@ -9,12 +9,31 @@ moors_kurtosis(x, na.rm = FALSE)
 \arguments{
 \item{x}{A numeric vector of observations.}
 
-\item{na.rm}{Logical. Should missing values be removed? Default is FALSE.}
+\item{na.rm}{Logical. Should missing values be removed before computation? Default is \code{FALSE}.}
 }
 \value{
-The Moors kurtosis value as a numeric. Returns NA if the 
-  interquartile range is zero.
+A numeric value representing the Moors kurtosis. Returns \code{NA_real_} 
+  with a warning if the interquartile range (the denominator) is zero.
 }
 \description{
-Calculates the Moors kurtosis for a numeric vector.
+Calculates Moors' measure of kurtosis for a numeric vector based on sample octiles.
+}
+\details{
+Moors' kurtosis is an order statistic-based measure of peakedness and tail heaviness. 
+Unlike traditional kurtosis metrics that rely on the second and fourth central moments, 
+Moors' kurtosis depends exclusively on octiles (the 12.5th, 25th, 37.5th, 62.5th, 75th, 
+and 87.5th percentiles). This provides a robust alternative to moment-based 
+kurtosis that is less sensitive to extreme outliers.
+
+By default, this function computes sample quantiles using R's default Type 7 algorithm.
+}
+\examples{
+set.seed(42)
+data <- rnorm(100, mean = 0, sd = 1)
+moors_kurtosis(data)
+
+}
+\seealso{
+\code{\link{galton_skewness}} for the complementary skewness measure, 
+  and \code{\link{plot.bfr}} for their application in distributional diagrams.
 }

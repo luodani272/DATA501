@@ -2,6 +2,7 @@
 
 S3method(plot,bfr)
 S3method(predict,bfr)
+S3method(print,bfr)
 S3method(print,summary.bfr)
 S3method(summary,bfr)
 export(dbfr)
