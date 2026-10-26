@@ -22,7 +22,9 @@ A data frame with 2013 rows and 12 variables:
 }
 }
 \source{
-Personal communication.
+The original multi-temporal dataset was provided via personal communication.
+
+Bhattacharya, A., Frery, A. C., & Rey, A. A. (2026). GRVI data [Data set]. Personal communication.
 }
 \usage{
 grvi_data
@@ -41,28 +43,5 @@ growth and structure using synthetic aperture radar (SAR).
 contain values of exactly 0.0. Because the BFR distribution is strictly defined 
 on the open interval (0, 1), users must filter or transform these boundary 
 values before applying `fit_bfr()`.
-
-BibTeX citation:
-```
- @misc{BFRData,
-   author       = {Avik Bhattacharya and Alejandro C. Frery and Andrea A. Rey},
-   title        = {{GRVI} data},
-   howpublished = {Personal communication},
-   month        = {October},
-   year         = {2026}
- }
-```
-}
-\examples{
-data(grvi_data)
-
-# Extract July 24th GRVI for Canola and filter to strictly (0, 1)
-canola_july <- grvi_data$GRVI_24_july[grvi_data$Crop == "Canola"]
-canola_clean <- canola_july[canola_july > 0 & canola_july < 1]
-
-fit_bfr(canola_clean, method = "mle")
-}
-\references{
-Bhattacharya, A., Frery, A. C., & Rey, A. A. (2026). \emph{GRVI data} [Personal communication].
 }
 \keyword{datasets}
