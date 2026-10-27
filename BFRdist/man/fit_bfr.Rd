@@ -4,51 +4,55 @@
 \alias{fit_bfr}
 \title{Fit the BFR distribution}
 \usage{
-fit_bfr(x, method = c("mle", "mme"))
+fit_bfr(x, method = c("mle", "qe"))
 }
 \arguments{
 \item{x}{A numeric vector of observations. Values must be strictly greater than 0 and less than 1. Missing (\code{NA}) and infinite values are not permitted.}
 
-\item{method}{A character string specifying the estimation method. Options are \code{"mle"} (Maximum Likelihood) or \code{"mme"} (Method of Moments).}
+\item{method}{A character string specifying the estimation method. Options are \code{"mle"} (Maximum Likelihood) or \code{"qe"} (Quantile Estimator).}
 }
 \value{
 An S3 object of class \code{bfr} containing the following components:
 \itemize{
   \item \code{estimate}: A named numeric vector containing the fitted \code{alpha} and \code{beta} parameters.
-  \item \code{method}: The estimation method used (\code{"mle"} or \code{"mme"}).
+  \item \code{method}: The estimation method used (\code{"mle"} or \code{"qe"}).
   \item \code{data}: The original numeric vector of data used for fitting.
-  \item \code{optim_results}: The complete output list from the internal \code{stats::optim()} call.
+  \item \code{optim_results}: The complete output list from the internal \code{stats::optim()} call (will be \code{NULL} if \code{method = "qe"}).
 }
 }
 \description{
 Estimates the shape parameters (\code{alpha} and \code{beta}) of the BFR distribution 
 from empirical data (such as Generalized Radar Vegetation Index datasets) using 
-Maximum Likelihood Estimation (MLE) or the Method of Moments (MME).
+Maximum Likelihood Estimation (MLE) or the Quantile Estimator (QE).
 }
 \details{
 Because the BFR distribution is bounded on the unit interval, all input data 
 must be strictly between 0 and 1. 
 
-The estimation process utilizes a two-step approach:
-1. Initial parameter estimates are computed quickly using a C++ implementation of 
-   the quantile-based estimator.
-2. These initial values are passed into \code{stats::optim()} using the "L-BFGS-B" 
-   algorithm to refine the estimates via either Maximum Likelihood (MLE) or 
-   the Method of Moments (MME).
+The estimation process utilizes a highly efficient C++ implementation of 
+the quantile-based estimator (QE) to calculate exact parameter values based on 
+sample quartiles. If \code{method = "qe"} is selected, these values are returned instantly. 
+If \code{method = "mle"} is selected, these QE values are passed into \code{stats::optim()} 
+as highly accurate starting guesses to rapidly refine the estimates via Maximum Likelihood.
 }
 \examples{
-# 1. Generate synthetic BFR data (e.g., simulating GRVI observations)
-set.seed(42)
+# Generate synthetic BFR data 
+set.seed(123)
 simulated_data <- rbfr(n = 200, alpha = 2, beta = 3)
 
-# 2. Fit the data using Maximum Likelihood Estimation (MLE)
+# Fit the data using the fast Quantile Estimator (QE)
+fit_qe <- fit_bfr(simulated_data, method = "qe")
+print(fit_qe$estimate)
+
+# Fit the data using Maximum Likelihood Estimation (MLE)
 fit_ml <- fit_bfr(simulated_data, method = "mle")
 print(fit_ml$estimate)
 
-# 3. Fit the data using the Method of Moments (MME)
-fit_moments <- fit_bfr(simulated_data, method = "mme")
-print(fit_moments$estimate)
-
+}
+\references{
+Bhattacharya, A., Frery, A. C., & Rey, A. A. (2026). A Statistical Framework 
+for Bounded Measurements with Applications to SAR Data. IEEE Transactions 
+on Geoscience and Remote Sensing.
 }
 \seealso{
 \code{\link{BFRdist}} for the core distribution functions.

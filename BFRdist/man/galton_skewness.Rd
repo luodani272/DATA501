@@ -16,8 +16,7 @@ A numeric value representing the Galton skewness. Returns \code{NA_real_}
   with a warning if the interquartile range (the denominator) is zero.
 }
 \description{
-Calculates Galton's measure of skewness (also known as Bowley's skewness) 
-for a numeric vector based on sample quartiles.
+Calculates Galton's measure of skewness for a numeric vector based on sample quartiles.
 }
 \details{
 Galton's skewness is an order statistic-based measure of asymmetry. 
@@ -29,7 +28,7 @@ where theoretical moments may not exist.
 By default, this function computes sample quantiles using R's default Type 7 algorithm.
 }
 \examples{
-set.seed(42)
+set.seed(123)
 data <- rnorm(100, mean = 0, sd = 1)
 galton_skewness(data)
 

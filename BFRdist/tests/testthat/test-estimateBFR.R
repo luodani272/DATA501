@@ -1,8 +1,7 @@
 library(testthat)
 library(BFRdist)
 
-# --- Consolidated Synthetic Data Setup ---
-# Defining these once at the top speeds up test execution
+# --- Data Setup ---
 set.seed(42)
 sim_data_small <- rbfr(50, alpha = 1.5, beta = 2.5)
 sim_data_large <- rbfr(1000, alpha = 2.0, beta = 3.0)
@@ -34,7 +33,6 @@ test_that("Core functions reject invalid shape parameters", {
   expect_error(pbfr(0.5, alpha = 2, beta = 0), "alpha and beta must be positive")
 })
 
-
 # --- Mathematical Integrity ---
 
 test_that("Densities are strictly non-negative", {
@@ -58,8 +56,7 @@ test_that("CDF and Quantile functions are inverses", {
   p_initial <- c(0.1, 0.5, 0.9)
   q_vals <- qbfr(p_initial, alpha = 1.5, beta = 2.0)
   p_recovered <- pbfr(q_vals, alpha = 1.5, beta = 2.0)
-  
-  # expect_equal allows for tiny floating-point math differences
+
   expect_equal(p_recovered, p_initial)
 })
 
@@ -68,6 +65,30 @@ test_that("Random generation produces valid bounds", {
   expect_true(all(sim_data_small > 0 & sim_data_small < 1))
 })
 
+test_that("Density integrates to exactly 1", {
+  # The total area under a valid probability density curve must equal 1
+  integral_result <- integrate(function(x) dbfr(x, 1.5, 2.0), lower = 0, upper = 1)
+  
+  expect_equal(integral_result$value, 1, tolerance = 1e-5)
+})
+
+test_that("LRE (Log Relative Error) maintains acceptable precision at extremes", {
+  # Define extreme probabilities close to 0 and 1, plus a center point
+  p_certified <- c(1e-6, 1e-5, 0.5, 1 - 1e-5, 1 - 1e-6)
+  
+  # Perform the round-trip calculation
+  q_vals <- qbfr(p_certified, alpha = 1.5, beta = 2.0)
+  p_computed <- pbfr(q_vals, alpha = 1.5, beta = 2.0)
+  
+  # Calculate Log Relative Error: LRE = -log10(|computed - certified| / certified)
+  # Adding a tiny constant (1e-16) to prevent log10(0) if they match exactly
+  lre <- -log10(abs(p_computed - p_certified) / p_certified + 1e-16)
+  
+  # Expect at least 5 significant digits of precision, even at the extremes
+  expect_true(all(lre > 5))
+  
+  # print(data.frame(p = p_certified, LRE = round(lre, 2)))
+})
 
 # --- Object-Oriented (S3) Implementation ---
 
@@ -105,20 +126,22 @@ test_that("S3 print methods produce expected console output", {
 test_that("S3 plot method executes without errors", {
   fit_obj <- fit_bfr(sim_data_small, method = "mle")
   
-  # Use a very small B for the test so it runs instantly
+  # very small B for the test so it runs instantly
   # expect_invisible verifies the function completes and returns its data invisibly
   expect_invisible(plot(fit_obj, B = 5, show_observed = TRUE))
 })
 
-
 # --- Alternative Methods and Edge Cases ---
 
-test_that("fit_bfr successfully fits using Method of Moments (MME)", {
-  fit_obj <- fit_bfr(sim_data_small, method = "mme")
+test_that("fit_bfr successfully fits using the Quantile Estimator (QE)", {
+  fit_obj <- fit_bfr(sim_data_small, method = "qe")
   
   expect_s3_class(fit_obj, "bfr")
-  expect_equal(fit_obj$method, "mme")
+  expect_equal(fit_obj$method, "qe")
   expect_true(is.numeric(fit_obj$estimate["alpha"]))
+  
+  # Ensure optim_results is NULL for QE
+  expect_null(fit_obj$optim_results)
 })
 
 test_that("fit_bfr rejects unsupported methods", {
@@ -132,10 +155,8 @@ test_that("fit_bfr rejects zero-variance data", {
 test_that("Predict method correctly rejects invalid inputs", {
   fit_obj <- fit_bfr(sim_data_small, method = "mle")
   
-  # Base R's S3 dispatch handles class checking automatically
   expect_error(predict(fit_obj, n.ahead = 0), "n.ahead must be at least 1")
 })
-
 
 # --- Order Statistic Validation ---
 
@@ -158,7 +179,6 @@ test_that("Summary statistics handle NA values when requested", {
   expect_true(is.numeric(moors_kurtosis(x_with_na, na.rm = TRUE)))
 })
 
-
 # --- Direct C++ Wrapper Validation ---
 
 test_that("estimateBFR directly validates inputs before C++ execution", {
@@ -180,7 +200,6 @@ test_that("estimateBFR directly validates inputs before C++ execution", {
   expect_error(estimateBFR(c(0.5, 1)), "strictly between 0 and 1")
   expect_error(estimateBFR(c(-0.5, 0.5)), "strictly between 0 and 1")
 })
-
 
 # --- Empirical Data & MLE Validation ---
 

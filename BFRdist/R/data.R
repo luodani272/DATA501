@@ -35,3 +35,8 @@
 #' 
 #' Bhattacharya, A., Frery, A. C., & Rey, A. A. (2026). GRVI data [Data set]. Personal communication.
 "grvi_data"
+
+#' @references
+#' Bhattacharya, A., Frery, A. C., & Rey, A. A. (2026). A Statistical Framework 
+#' for Bounded Measurements with Applications to SAR Data. IEEE Transactions 
+#' on Geoscience and Remote Sensing.

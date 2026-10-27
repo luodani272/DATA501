@@ -1,21 +1,25 @@
 Package: BFRdist
 Type: Package
-Title: BFR distribution
+Title: The BFR Distribution for Bounded Measurements
 Version: 0.1.1
-Author: Daniel Luo and Jennifer Hanna
+Authors@R: c(
+    person("Daniel", "Luo", role = "aut"),
+    person("Jennifer", "Hanna", email = "jennifer.suzanne.hanna@gmail.com", role = c("aut", "cre"))
+  )
 Maintainer: Jennifer Hanna <jennifer.suzanne.hanna@gmail.com>
-Description: Captures the functionality of the BFR distribution, a novel, flexible distribution which is arctan-generated and defined on the unit interval for Generalized Radar Vegetation Index (GRVI) analysis.
+Description: Implements the novel BFR distribution, a highly flexible and analytically tractable model for continuous data strictly bounded on the unit interval. Serving as a robust alternative to the Beta and Kumaraswamy distributions, this package provides closed-form quantile functions, rapid parameter estimation, and order-statistic diagnostics for a wide variety of bounded data, including proportions, probabilities, and normalized indices, with specific applications in Synthetic Aperture Radar (SAR) data.
 License: MIT + file LICENSE
 Imports: 
     Rcpp,
     stats
 LinkingTo: Rcpp 
 NeedsCompilation: yes
-Config/roxygen2/version: 8.0.0
+Config/roxygen2/version: 8.1.1
 Encoding: UTF-8
 Suggests: 
     knitr,
     rmarkdown,
+    readxl,
     testthat (>= 3.0.0)
 VignetteBuilder: knitr
 Config/testthat/edition: 3

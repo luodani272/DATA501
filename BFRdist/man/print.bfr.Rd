@@ -2,22 +2,44 @@
 % Please edit documentation in R/print_method.R
 \name{print.bfr}
 \alias{print.bfr}
-\title{Print a BFR Distribution Fit}
+\title{Print Method for BFR Distribution Fits}
 \usage{
 \method{print}{bfr}(x, ...)
 }
 \arguments{
-\item{x}{An object of S3 class \code{bfr}, typically the result of \code{fit_bfr}.}
+\item{x}{An object of class \code{bfr}, typically the result of a call to \code{\link{fit_bfr}}.}
 
 \item{...}{Additional arguments passed to or from other methods.}
 }
 \value{
-Invisibly returns the original \code{bfr} object \code{x}.
+Invisibly returns the original \code{bfr} object.
 }
 \description{
-An S3 method that prints a clean, concise view of a fitted BFR distribution.
+Prints a concise summary of the fitted BFR model, displaying the estimated 
+shape parameters and the estimation method used.
 }
 \details{
-This function provides a streamlined view of a \code{bfr} object, displaying 
-only the basic fitted parameter estimates and the estimation method used[cite: 1, 2].
+This function provides a clean terminal output for objects of S3 class \code{bfr}. 
+It displays the estimation method—either Quantile Estimation (QE) or Maximum 
+Likelihood Estimation (MLE)—the number of valid observations used in the fit, 
+and the final estimated values for the shape parameters \eqn{\alpha} and \eqn{\beta}.
+}
+\examples{
+\donttest{
+# Generate synthetic BFR data
+set.seed(123)
+simulated_data <- rbfr(n = 250, alpha = 1.5, beta = 2.5)
+
+# Fit the model using the high-performance Quantile Estimator (QE)
+model_qe <- fit_bfr(simulated_data, method = "qe")
+print(model_qe)
+
+# Fit the model using Maximum Likelihood Estimation (MLE)
+model_mle <- fit_bfr(simulated_data, method = "mle")
+print(model_mle)
+}
+
+}
+\seealso{
+\code{\link{fit_bfr}} for fitting the BFR distribution.
 }

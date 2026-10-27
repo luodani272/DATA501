@@ -1,54 +1,117 @@
-#' Generate a Pearson-Like Distributional Diagram for BFR Fits
+#' Generate Diagnostic or Density Plots for BFR Fits
 #'
-#' Generates a parametric bootstrap distribution of Galton's skewness (SK_G)
-#' and Moors' kurtosis (KU_M) for a fitted BFR distribution, plotting the
-#' bootstrap replications alongside confidence ellipses.
+#' Generates either a parametric bootstrap distribution of Galton's skewness (SK_G)
+#' and Moors' kurtosis (KU_M) alongside confidence ellipses, or a fitted 
+#' density curve over an empirical histogram for a fitted BFR distribution.
 #'
 #' @details
-#' This function generates a Pearson-like diagram for continuous double-bounded data. 
-#' Rather than relying on traditional sample moments, which can be sensitive to outliers, 
-#' this geometric representation classifies distributions using order statistic-based measures. 
+#' This function provides two types of visualizations for continuous double-bounded data:
 #' 
-#' Specifically, it plots Galton's measure of skewness (SK_G) against Moors' measure of kurtosis (KU_M). 
-#' This visual framework is highly useful for tracking structural or phenological changes in 
-#' bounded features, such as the Generalized Radar Vegetation Index (GRVI).
+#' \itemize{
+#' \item \strong{Diagnostic Plot (`type = "diagnostic"`):} Generates a Pearson-like diagram that 
+#' classifies distributions using order statistic-based measures. It plots Galton's 
+#' measure of skewness (SK_G) against Moors' measure of kurtosis (KU_M). This visual 
+#' framework is highly useful for tracking structural or phenological changes in 
+#' bounded features, such as the Generalized Radar Vegetation Index (GRVI), without 
+#' relying on traditional sample moments which can be sensitive to outliers.
+#' \item \strong{Density Plot (`type = "density"`):} Plots an empirical histogram of the underlying 
+#' data and overlays the theoretical BFR probability density curve based on the fitted 
+#' \eqn{\alpha} and \eqn{\beta} parameters.
+#' }
 #' 
 #' Because the BFR distribution relies on the unit interval, the underlying data inside 
 #' the \code{bfr} object must be strictly greater than 0 and less than 1.
 #'
 #' @param x An object of S3 class \code{bfr} (returned by \code{fit_bfr}).
-#' @param B The number of parametric bootstrap replications. Default is 1000.
+#' @param type A character string specifying the type of plot to generate. 
+#'   Must be either \code{"diagnostic"} (the default) or \code{"density"}.
+#' @param B The number of parametric bootstrap replications. Default is 1000. 
+#'   (Only used if \code{type = "diagnostic"}).
 #' @param conf A numeric vector containing the confidence levels for the
-#'   confidence ellipses. Default is \code{c(0.90, 0.95)}.
-#' @param seed An optional numeric value used to set the random seed for reproducible bootstrapping.
-#'   Default is \code{NULL}.
+#'   confidence ellipses. Default is \code{c(0.90, 0.95)}. 
+#'   (Only used if \code{type = "diagnostic"}).
+#' @param seed An optional numeric value used to set the random seed for reproducible 
+#'   bootstrapping. Default is \code{NULL}. (Only used if \code{type = "diagnostic"}).
 #' @param show_observed Logical. If \code{TRUE}, the SK_G and KU_M values calculated
 #'   from the original empirical data are displayed on the plot. Default is \code{TRUE}.
-#' @param ... Additional arguments passed to the underlying base \code{graphics::plot} function.
+#'   (Only used if \code{type = "diagnostic"}).
+#' @param ... Additional arguments passed to the underlying base \code{graphics::plot} 
+#'   or \code{graphics::hist} functions.
 #'
-#' @return Invisibly returns a list containing the bootstrap statistics,
-#'   observed statistics, bootstrap centre, confidence levels, parameters,
-#'   and bootstrap sample information.
+#' @return 
+#' For \code{type = "diagnostic"}, invisibly returns a list containing the bootstrap 
+#' statistics, observed statistics, bootstrap centre, confidence levels, parameters, 
+#' and bootstrap sample information.
+#' 
+#' For \code{type = "density"}, invisibly returns a list containing the fitted 
+#' \code{alpha} and \code{beta} parameters.
 #'
 #' @seealso \code{\link{fit_bfr}} for generating the required \code{bfr} object.
 #'
 #' @examples
 #' \donttest{
-#' # 1. Generate synthetic BFR data
-#' set.seed(42)
+#' # Generate synthetic BFR data
+#' set.seed(123)
 #' simulated_data <- rbfr(n = 200, alpha = 2, beta = 3)
 #'
-#' # 2. Fit the model to create a 'bfr' object
-#' bfr_fit <- fit_bfr(simulated_data, method = "mle")
+#' # Fit the model to create a 'bfr' object
+#' bfr_fit <- fit_bfr(simulated_data, method = "qe")
 #'
-#' # 3. Generate the Pearson-like SK_G x KU_M diagram
-#' plot(bfr_fit, B = 500, conf = c(0.90, 0.95), seed = 123)
+#' # Generate the Pearson-like SK_G x KU_M diagram
+#' plot(bfr_fit, type = "diagnostic", B = 500, conf = c(0.90, 0.95), seed = 123)
+#' 
+#' # Generate the fitted density curve over the empirical histogram
+#' plot(bfr_fit, type = "density")
 #' }
 #'
 #' @method plot bfr
 #' @export
 #' 
-plot.bfr <- function(x, B = 1000, conf = c(0.90, 0.95), seed = NULL, show_observed = TRUE, ...) {
+plot.bfr <- function(x, type = c("diagnostic", "density"), B = 1000, conf = c(0.90, 0.95), seed = NULL, show_observed = TRUE, ...) {
+  type <- match.arg(type)
+  
+  # If density plot is requested, plot histogram and fitted density curve
+  if (type == "density") {
+    data <- x$data
+    alpha <- x$estimate["alpha"]
+    beta <- x$estimate["beta"]
+    
+    if (any(data <= 0 | data >= 1)) {
+      stop("'data' must contain observations strictly between 0 and 1.")
+    }
+    
+    # Calculate density curve values and histogram bins without warnings
+    x_vals <- seq(0.001, 0.999, length.out = 300)
+    y_vals <- dbfr(x_vals, alpha = alpha, beta = beta)
+    
+    h <- graphics::hist(data, plot = FALSE)
+    
+    # Set y limits to accommodate both the histogram and the fitted curve smoothly
+    max_y <- max(c(h$density, y_vals), na.rm = TRUE) * 1.15
+    
+    graphics::hist(
+      data, 
+      probability = TRUE, 
+      col = "gray90", 
+      border = "white",
+      main = "BFR Distribution Fit: Density", 
+      xlab = "x", 
+      ylim = c(0, max_y),
+      ...
+    )
+    
+    graphics::lines(x_vals, y_vals, col = "firebrick", lwd = 2.5)
+    
+    graphics::legend(
+      "topright", 
+      legend = c("Empirical Histogram", "Fitted BFR Density"),
+      col = c("gray70", "firebrick"), 
+      lwd = c(10, 2.5), 
+      bty = "n"
+    )
+    
+    return(invisible(list(alpha = alpha, beta = beta)))
+  }
   
   # Extract data and parameters from the fitted bfr list object
   data <- x$data

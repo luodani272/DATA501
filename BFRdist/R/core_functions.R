@@ -6,14 +6,16 @@
 #' @details
 #' The BFR distribution with shape parameters \eqn{\alpha > 0} and \eqn{\beta > 0} 
 #' has the probability density function (PDF):
-#' \deqn{f(x) = \frac{2\beta}{\pi} \frac{\alpha^\beta x^{\beta - 1} (1 - x)^{\beta - 1}}{\alpha^{2\beta} x^{2\beta} + (1 - x)^{2\beta}}}
-#' for \eqn{0 < x < 1}.
+#' \deqn{f_{BFR}(x;\alpha,\beta)=\frac{2\beta}{\pi}\cdot\frac{\alpha^{\beta}x^{\beta-1}(1-x)^{\beta-1}}{\alpha^{2\beta}x^{2\beta}+(1-x)^{2\beta}}\mathbb{I}_{(0,1)}(x)}
+#' where \eqn{\alpha > 0} and \eqn{\beta > 0}.
 #' 
 #' The cumulative distribution function (CDF) is given by:
-#' \deqn{F(q) = \frac{2}{\pi} \arctan\left( \frac{\alpha q}{1 - q} \right)^\beta}
+#' \deqn{F_{BFR}(x;\alpha,\beta) = \begin{cases} 0 & \text{if } x \le 0 \\ \frac{2}{\pi} \arctan\left(\left(\frac{\alpha x}{1-x}\right)^\beta\right) & \text{if } 0 < x < 1 \\ 1 & \text{if } x \ge 1 \end{cases}}
+#' where \eqn{\alpha > 0} and \eqn{\beta > 0}.
 #' 
-#' The quantile function is the inverse of the CDF:
-#' \deqn{Q(p) = \left( 1 + \alpha \left( \tan\left(\frac{\pi p}{2}\right) \right)^{-1/\beta} \right)^{-1}}
+#' The quantile function is given by:
+#' \deqn{Q_{BFR}(u;\alpha,\beta)=\frac{1}{1+\alpha\left(\tan\left(\frac{\pi u}{2}\right)\right)^{-1/\beta}}\mathbb{I}_{(0,1)}(u)}
+#' where \eqn{\alpha > 0} and \eqn{\beta > 0}.
 #' 
 #' @useDynLib BFRdist, .registration = TRUE
 #' @import Rcpp
@@ -26,7 +28,7 @@
 #' 
 #' @return 
 #' \code{dbfr} gives the density, \code{pbfr} gives the distribution function (CDF), 
-#' \code{qbfr} gives the quantile function, and \code{rbfr} generates random deviates.
+#' \code{qbfr} gives the quantile function, and \code{rbfr} generates random samples from the BFR distribution.
 #' 
 #' The length of the result is determined by \code{n} for \code{rbfr}, and is the maximum 
 #' of the lengths of the numerical arguments for the other functions. The numerical arguments 
@@ -59,6 +61,11 @@
 #' plot(x_seq, y_dens, type = "l", col = "blue", lwd = 2,
 #'      main = "BFR Density (alpha=1.5, beta=2)",
 #'      xlab = "x", ylab = "Density")
+#'      
+#' @references
+#' Bhattacharya, A., Frery, A. C., & Rey, A. A. (2026). A Statistical Framework 
+#' for Bounded Measurements with Applications to SAR Data. IEEE Transactions 
+#' on Geoscience and Remote Sensing.
 NULL
 
 #' @rdname BFRdist

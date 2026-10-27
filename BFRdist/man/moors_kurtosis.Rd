@@ -28,7 +28,7 @@ kurtosis that is less sensitive to extreme outliers.
 By default, this function computes sample quantiles using R's default Type 7 algorithm.
 }
 \examples{
-set.seed(42)
+set.seed(123)
 data <- rnorm(100, mean = 0, sd = 1)
 moors_kurtosis(data)
 

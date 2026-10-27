@@ -19,21 +19,29 @@ An S3 method that prints the formatted summary of a fitted BFR distribution.
 }
 \details{
 This function displays the summary output for objects of class \code{summary.bfr}. 
-It explicitly formats and outputs the standard errors and goodness-of-fit metrics 
-(including Log-Likelihood, AIC, and BIC) derived from the fitted model.
+The printed output adapts depending on the estimation method used:
+\itemize{
+  \item \strong{Maximum Likelihood Estimation (MLE):} Displays parameter estimates, 
+    their approximated standard errors, and full goodness-of-fit metrics 
+    (Log-Likelihood, AIC, and BIC).
+  \item \strong{Quantile Estimator (QE):} Displays parameter estimates and the 
+    Log-Likelihood. Standard errors are shown as \code{NA} (since QE is a closed-form 
+    algebraic estimator), and information criteria (AIC/BIC) are cleanly omitted.
+}
 }
 \examples{
 \donttest{
-# 1. Generate synthetic GRVI-like data
+# Generate synthetic data
 set.seed(123)
 raw_data <- rbfr(n = 100, alpha = 1.5, beta = 2.5)
 
-# 2. Fit the BFR model to the data
-bfr_model <- fit_bfr(raw_data, method = "mle")
+# Fit and print summary for the high-speed Quantile Estimator (QE)
+bfr_qe <- fit_bfr(raw_data, method = "qe")
+print(summary(bfr_qe))
 
-# 3. Generate and print the summary (implicitly calls print.summary.bfr)
-model_summary <- summary(bfr_model)
-print(model_summary)
+# Fit and print summary for Maximum Likelihood Estimation (MLE)
+bfr_mle <- fit_bfr(raw_data, method = "mle")
+print(summary(bfr_mle))
 }
 
 }

@@ -29,14 +29,14 @@ strictly fall within the unit interval (0, 1).
 }
 \examples{
 \donttest{
-# 1. Generate synthetic GRVI-like data
+# Generate synthetic GRVI-like data
 set.seed(123)
 raw_data <- rbfr(n = 100, alpha = 1.5, beta = 2.5)
 
-# 2. Fit the BFR model to the data
-bfr_model <- fit_bfr(raw_data, method = "mle")
+# Fit the BFR model to the data
+bfr_model <- fit_bfr(raw_data, method = "qe")
 
-# 3. Simulate 5 new predictions based on the fitted parameters
+# Simulate 5 new predictions based on the fitted parameters
 new_predictions <- predict(bfr_model, n.ahead = 5)
 print(new_predictions)
 }

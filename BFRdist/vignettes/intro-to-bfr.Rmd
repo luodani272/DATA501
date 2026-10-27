@@ -2,6 +2,7 @@
 title: "Introduction to BFRdist"
 author: "Daniel Luo and Jennifer Hanna"
 output: rmarkdown::html_vignette
+bibliography: references.bib
 vignette: >
   %\VignetteIndexEntry{Introduction to BFRdist}
   %\VignetteEngine{knitr::rmarkdown}
@@ -12,15 +13,15 @@ vignette: >
   %\VignetteKeyword{Moors kurtosis}
 ---
 
-The `BFRdist` package provides computational and visual tools for the novel BFR distribution, an expressive and analytically tractable model for double-bounded data (measurements strictly confined to a known, finite interval such as $[0, 1]$). Named after the authors of its foundational paper (Avik Bhattacharya, Alejandro C. Frery, and Andrea A. Rey), the BFR distribution was developed to overcome the limitations of traditional bounded models like the Beta and Kumaraswamy distributions, which often force researchers to trade flexibility for analytical convenience.
+The `BFRdist` package provides computational and visual tools for the novel BFR distribution, an expressive and analytically tractable model for double-bounded data measurements strictly confined to the unit interval $(0,1)$, or data scaled to this range. Named after the authors of its foundational paper, Avik Bhattacharya, Alejandro C. Frery, and Andrea A. Rey [@bhattacharya2024], the BFR distribution was developed to overcome the limitations of traditional bounded models like the Beta and Kumaraswamy distributions, which often force researchers to trade flexibility for analytical convenience.
 
 Its mathematical versatility makes it highly adaptable for a wide variety of bounded measurements, including proportions, phase, and entropy. To support this, `BFRdist` provides a domain-agnostic computational environment encompassing standard probability functions, high-performance parameter estimation, and object-oriented diagnostic tools:   
 
 - **Core Distribution Suite:** Implements the standard `d/p/q/r` family of functions (`dbfr`, `pbfr`, `qbfr`, `rbfr`) to calculate probability density, cumulative distribution, and quantiles, as well as generate random synthetic data on the unit interval.   
 
-- **High-Performance Parameter Estimation:** Utilizes a compiled C++ backend (`estimateBFR_cpp`) to rapidly estimate initial shape parameters using sample quartiles, avoiding the immediate need for numerical optimization. By utilizing compiled C++ code for these intensive mathematical iterations, the package avoids R's native memory overhead and significantly reduces computation time when working with large datasets. The `fit_bfr()` function then fits empirical data using Maximum Likelihood Estimation (MLE) or the Method of Moments (MME), returning a custom S3 `bfr` object.   
+- **High-Performance Parameter Estimation:** Utilizes a compiled C++ backend (`estimateBFR_cpp`) to rapidly estimate initial shape parameters using sample quartiles, avoiding the immediate need for numerical optimization. By utilizing compiled C++ code for these intensive mathematical iterations, the package avoids R's native memory overhead and significantly reduces computation time when working with large datasets. The `fit_bfr()` function then fits empirical data using the computationally efficient Quantile Estimator (QE), or Maximum Likelihood Estimation (MLE) as a benchmark for traditional theoretical precision, returning a custom S3 `bfr` object. 
 
-- **Statistical Utilities & Diagnostic Plotting:** Calculates robust, order statistic-based measures of asymmetry and tail heaviness via `galton_skewness()` and `moors_kurtosis()`. The custom S3 `plot.bfr` method simulates parametric bootstrap replications of the fitted data to generate a diagnostic Pearson-like $SK_G \times KU_M$ diagram with bivariate normal confidence ellipses.   
+- **Statistical Utilities & Diagnostic Plotting:** Calculates robust, order statistic-based measures of asymmetry and tail heaviness via `galton_skewness()` and `moors_kurtosis()`. The custom S3 `plot.bfr` method simulates parametric bootstrap replications of the fitted data to generate the novel Pearson-like $SK_G \times KU_M$ diagnostic diagram introduced alongside the BFR distribution by Bhattacharya et al. (2026).
 
 - **S3 Object-Oriented Ecosystem:** Includes comprehensive S3 methods (`print`, `summary`, `predict`) that calculate standard errors, output essential goodness-of-fit metrics (Log-Likelihood, AIC, and BIC), and simulate new predictions based on the fitted model parameters. 
 
@@ -40,11 +41,11 @@ $$f_{BFR}(x;\alpha,\beta)=\frac{2\beta}{\pi}\cdot\frac{\alpha^{\beta}x^{\beta-1}
 where $\alpha>0$ and $\beta>0$.
 
 **Cumulative Distribution Function (CDF)**
-$$F_{BFR}(q;\alpha,\beta)=\frac{2}{\pi}\arctan\left(\left(\frac{\alpha q}{1-q}\right)^\beta\right)1_{(0,1)}(q)$$
-for $0<q<1$.
+$$F_{BFR}(x;\alpha,\beta) = \begin{cases} 0 & \text{if } x \le 0 \\  \frac{2}{\pi} \arctan\left(\frac{\alpha x}{1-x}\right)^\beta& \text{if } 0 < x < 1 \\  1 & \text{if } x \ge 1 \end{cases}$$
+where $\alpha>0$ and $\beta>0$.
 
 **Quantile Function**
-$$Q_{BFR}(p;\alpha,\beta)=\left[1+\alpha\left(\tan\left(\frac{\pi p}{2}\right)\right)^{\frac{-1}{\beta}}\right]^{-1}1_{(0,1)}(p)$$
+$$Q_{BFR}(u;\alpha,\beta)=\frac{1}{1+\alpha\left(\tan\left(\frac{\pi u}{2}\right)\right)^{-1/\beta}}\mathbb{I}_{(0,1)}(u)$$
 where $\alpha>0$ and $\beta>0$.
 
 ## 2. Setup and Core Functions
@@ -52,12 +53,9 @@ where $\alpha>0$ and $\beta>0$.
 First, install the package from GitHub. You can use `pak` or `remotes`:
 
 ```{r install, eval = FALSE}
-# Option 1: Install BFRdist using pak
+# Install BFRdist using pak
 options(pkg.build_vignettes = TRUE)
 pak::pak("luodani272/DATA501/BFRdist")
-
-# Option 2: Install using remotes
-remotes::install_github("luodani272/DATA501", subdir = "BFRdist", build_vignettes = TRUE)
 ```
 
 Then load the package into your session:
@@ -84,7 +82,7 @@ qbfr(0.5, alpha = alpha_val, beta = beta_val)
 
 ## 3. Synthetic Data Simulation and Validation
 
-Before analyzing field data, we can validate the package's estimation accuracy in a controlled mathematical environment using the `rbfr()` function. We will generate a synthetic dataset with known parameters and confirm that `fit_bfr()` successfully recovers them.
+Before analyzing field data, we can validate the package's estimation accuracy in a controlled mathematical environment using the `rbfr()` function. We will generate a synthetic dataset with known parameters and confirm that `fit_bfr()` successfully recovers them. As demonstrated in the Monte Carlo evaluation in the distribution's foundational paper, the Quantile Estimator (QE) provides rapid, closed-form parameter recovery, with finite-sample bias and root mean square error (RMSE) systematically decreasing as sample size $n$ increases. 
 
 ```{r simulate-data}
 set.seed(123)
@@ -92,18 +90,20 @@ set.seed(123)
 # Generate 500 random observations strictly on (0, 1)
 synthetic_data <- rbfr(n = 500, alpha = 2.0, beta = 3.5)
 
-# Fit the BFR distribution using Maximum Likelihood Estimation
-synthetic_model <- fit_bfr(synthetic_data, method = "mle")
+# Fit the BFR distribution using Quantile Estimation or Maximum Likelihood Estimation
+synthetic_model_qe <- fit_bfr(synthetic_data, method = "qe")
+synthetic_model_mle <- fit_bfr(synthetic_data, method = "mle")
 
 # Print the model to verify parameter recovery
-print(synthetic_model)
+print(synthetic_model_qe)
+print(synthetic_model_mle)
 ```
 
 The estimated parameters closely match our true inputs ($\alpha = 2.0, \beta = 3.5$), proving the C++ backend's mathematical reliability.
 
 ## 4. Application to Real-World Agricultural Data
 
-With the model validated, we can apply it to empirical field measurements. The `BFRdist` package includes a built-in multi-temporal dataset (`grvi_data`) containing Generalized Radar Vegetation Index (GRVI) measurements across Canola, Soybeans, and Spring Wheat. 
+With the model validated, we can apply it to empirical field measurements. The `BFRdist` package includes a built-in multi-temporal dataset (`grvi_data`) containing Generalized Radar Vegetation Index (GRVI) measurements across Canola, Soybeans, and Spring Wheat [@BFRData]. 
 
 Because the BFR distribution is defined strictly on the open unit interval $(0, 1)$, we must filter out any exact `0` or `1` boundaries before fitting the model.
 
@@ -111,60 +111,55 @@ Because the BFR distribution is defined strictly on the open unit interval $(0, 
 # Load the real dataset
 data("grvi_data", package = "BFRdist")
 
-# Extract July 24th GRVI measurements for Canola
-canola_july <- grvi_data$GRVI_24_july[grvi_data$Crop == "Canola"]
+# Extract early-season June 6th GRVI for Soybeans
+soy_june <- grvi_data$GRVI_06Jun[grvi_data$Crop == "Soybeans"]
 
 # Filter strictly to (0, 1) to satisfy BFR constraints
-canola_clean <- canola_july[canola_july > 0 & canola_july < 1]
+soy_clean <- soy_june[soy_june > 0 & soy_june < 1]
 
 # Calculate robust summary statistics
-galton_skewness(canola_clean)
-moors_kurtosis(canola_clean)
+galton_skewness(soy_clean)
+moors_kurtosis(soy_clean)
 
 # Fit the empirical Canola data
-real_model <- fit_bfr(canola_clean, method = "mle")
+real_model_qe <- fit_bfr(soy_clean, method = "qe")
+real_model_mle <- fit_bfr(soy_clean, method = "mle")
 ```
 
 ### Exploring the Fitted Model (S3 Methods)
 
-The package implements S3 generic methods to cleanly extract diagnostics from the fitted `bfr` object. `summary.bfr` outputs standard errors and goodness-of-fit metrics (Log-Likelihood, AIC, BIC), while `predict.bfr` simulates new observations.
+The package implements S3 generic methods to cleanly extract diagnostics from the fitted `bfr` object. `summary.bfr` outputs standard errors and goodness-of-fit metrics (Log-Likelihood, AIC, BIC), while `predict.bfr` simulates new observations based on the fitted model parameters.
 
 ```{r summary-methods}
-summary(real_model)
+summary(real_model_qe)
+summary(real_model_mle)
 
 # Simulate 5 new predictions based on the fitted parameters
-predict(real_model, n.ahead = 5)
+predict(real_model_qe, n.ahead = 5)
 ```
 
-The `plot.bfr` method generates Pearson-like $SK_G \times KU_M$ diagnostic diagrams automatically. This diagram classifies models using order statistic-based measures of skewness and kurtosis rather than sample moments, making it highly robust for bounded data.
+The `plot.bfr` method generates Pearson-like $SK_G \times KU_M$ diagnostic diagrams automatically. This diagram classifies models using Galton's skewness ($SK_G$) and Moors' kurtosis ($KU_M$) based on order statistics rather than traditional sample moments, making it highly robust against outliers for bounded data.
 
 ```{r plot-method, fig.width=7, fig.height=5}
 # Generate the diagnostic SK_G x KU_M plot with confidence ellipses
-plot(real_model)
+plot(real_model_qe)
+
+# Generate the fitted density curve over the empirical histogram
+plot(real_model_qe, type = "density")
 ```
-
-### Evaluating Fit Across Different Growth Stages
-
-Crop canopies change structure dramatically over a growing season. A mathematical model that fits well in early June might fail to capture the complexity of late July. We can demonstrate the diagnostic power of our plot.bfr method by contrasting the poor fit of the July 24th Canola data with the excellent fit of the early-season June 6th Soybean data.
-
-```{r good-fit-example, fig.width=7, fig.height=5}
-# Extract early-season June 6th GRVI for Soybeans
-soy_june <- grvi_data$GRVI_06Jun[grvi_data$Crop == "Soybeans"]
-soy_clean <- soy_june[soy_june > 0 & soy_june < 1]
-
-# Fit the model and generate the diagnostic plot
-soy_model <- fit_bfr(soy_clean, method = "mle")
-plot(soy_model)
-```
-
-In this second plot, the observed statistic falls neatly within the 90% confidence ellipse. This confirms that the BFR model is highly appropriate for the early-season Soybean measurements, proving the utility of our geometric diagnostic framework for remote sensing data.
 
 ## 5. Conclusion and Acknowledgments
 
-The `BFRdist` package provides a robust computational framework for bounded measurements. Users of the package must ensure that any proprietary GRVI data fed into the package is obtained legally and cited properly. 
+The `BFRdist` package provides a robust, high-performance computational framework for modeling bounded measurements. By bridging analytical flexibility with computational scalability, `BFRdist` addresses key limitations of traditional bounded models like the Beta and Kumaraswamy distributions:
+
+* **Bridging Theoretical Extremes:** For bounded features, practitioners have historically had to choose between the beta distribution (highly expressive but reliant on special functions and numerical maximum likelihood estimation) or the Kumaraswamy distribution (closed-form but restricted to the uniform as its only symmetric case). The BFR distribution narrows this gap by delivering both expressiveness and mathematical tractability.
+
+* **Computational Efficiency:** The Quantile Estimator (QE) enables rapid, closed-form parameter recovery without numerical optimization, making it ideally suited for large-scale remote sensing and Earth observation datasets.
+
+* **Robustness:** The Pearson-like diagnostic framework using Galton's skewness ($SK_G$) and Moors' kurtosis ($KU_M$) shields models from outlier sensitivity, ensuring reliable goodness-of-fit evaluations for complex environmental features like the Generalized Radar Vegetation Index (GRVI).
 
 We thank Avik Bhattacharya, Alejandro C. Frery, and Andrea A. Rey for providing the real-world multi-temporal GRVI dataset used in the examples of this package.
 
-For full theoretical details, please refer to the foundational paper:
+For full theoretical details, please refer to the foundational paper [@bhattacharya2024].
 
-> Bhattacharya, A., Frery, A. C., & Rey, A. A. (2026). A Statistical Framework for Bounded Measurements with Applications to SAR Data. *IEEE Transactions on Geoscience and Remote Sensing*.
+## References

@@ -2,59 +2,86 @@
 % Please edit documentation in R/plot_method.R
 \name{plot.bfr}
 \alias{plot.bfr}
-\title{Generate a Pearson-Like Distributional Diagram for BFR Fits}
+\title{Generate Diagnostic or Density Plots for BFR Fits}
 \usage{
-\method{plot}{bfr}(x, B = 1000, conf = c(0.9, 0.95), seed = NULL, show_observed = TRUE, ...)
+\method{plot}{bfr}(
+  x,
+  type = c("diagnostic", "density"),
+  B = 1000,
+  conf = c(0.9, 0.95),
+  seed = NULL,
+  show_observed = TRUE,
+  ...
+)
 }
 \arguments{
 \item{x}{An object of S3 class \code{bfr} (returned by \code{fit_bfr}).}
 
-\item{B}{The number of parametric bootstrap replications. Default is 1000.}
+\item{type}{A character string specifying the type of plot to generate. 
+Must be either \code{"diagnostic"} (the default) or \code{"density"}.}
+
+\item{B}{The number of parametric bootstrap replications. Default is 1000. 
+(Only used if \code{type = "diagnostic"}).}
 
 \item{conf}{A numeric vector containing the confidence levels for the
-confidence ellipses. Default is \code{c(0.90, 0.95)}.}
+confidence ellipses. Default is \code{c(0.90, 0.95)}. 
+(Only used if \code{type = "diagnostic"}).}
 
-\item{seed}{An optional numeric value used to set the random seed for reproducible bootstrapping.
-Default is \code{NULL}.}
+\item{seed}{An optional numeric value used to set the random seed for reproducible 
+bootstrapping. Default is \code{NULL}. (Only used if \code{type = "diagnostic"}).}
 
 \item{show_observed}{Logical. If \code{TRUE}, the SK_G and KU_M values calculated
-from the original empirical data are displayed on the plot. Default is \code{TRUE}.}
+from the original empirical data are displayed on the plot. Default is \code{TRUE}.
+(Only used if \code{type = "diagnostic"}).}
 
-\item{...}{Additional arguments passed to the underlying base \code{graphics::plot} function.}
+\item{...}{Additional arguments passed to the underlying base \code{graphics::plot} 
+or \code{graphics::hist} functions.}
 }
 \value{
-Invisibly returns a list containing the bootstrap statistics,
-  observed statistics, bootstrap centre, confidence levels, parameters,
-  and bootstrap sample information.
+For \code{type = "diagnostic"}, invisibly returns a list containing the bootstrap 
+statistics, observed statistics, bootstrap centre, confidence levels, parameters, 
+and bootstrap sample information.
+
+For \code{type = "density"}, invisibly returns a list containing the fitted 
+\code{alpha} and \code{beta} parameters.
 }
 \description{
-Generates a parametric bootstrap distribution of Galton's skewness (SK_G)
-and Moors' kurtosis (KU_M) for a fitted BFR distribution, plotting the
-bootstrap replications alongside confidence ellipses.
+Generates either a parametric bootstrap distribution of Galton's skewness (SK_G)
+and Moors' kurtosis (KU_M) alongside confidence ellipses, or a fitted 
+density curve over an empirical histogram for a fitted BFR distribution.
 }
 \details{
-This function generates a Pearson-like diagram for continuous double-bounded data. 
-Rather than relying on traditional sample moments, which can be sensitive to outliers, 
-this geometric representation classifies distributions using order statistic-based measures. 
+This function provides two types of visualizations for continuous double-bounded data:
 
-Specifically, it plots Galton's measure of skewness (SK_G) against Moors' measure of kurtosis (KU_M). 
-This visual framework is highly useful for tracking structural or phenological changes in 
-bounded features, such as the Generalized Radar Vegetation Index (GRVI).
+\itemize{
+\item \strong{Diagnostic Plot (`type = "diagnostic"`):} Generates a Pearson-like diagram that 
+classifies distributions using order statistic-based measures. It plots Galton's 
+measure of skewness (SK_G) against Moors' measure of kurtosis (KU_M). This visual 
+framework is highly useful for tracking structural or phenological changes in 
+bounded features, such as the Generalized Radar Vegetation Index (GRVI), without 
+relying on traditional sample moments which can be sensitive to outliers.
+\item \strong{Density Plot (`type = "density"`):} Plots an empirical histogram of the underlying 
+data and overlays the theoretical BFR probability density curve based on the fitted 
+\eqn{\alpha} and \eqn{\beta} parameters.
+}
 
 Because the BFR distribution relies on the unit interval, the underlying data inside 
 the \code{bfr} object must be strictly greater than 0 and less than 1.
 }
 \examples{
 \donttest{
-# 1. Generate synthetic BFR data
-set.seed(42)
+# Generate synthetic BFR data
+set.seed(123)
 simulated_data <- rbfr(n = 200, alpha = 2, beta = 3)
 
-# 2. Fit the model to create a 'bfr' object
-bfr_fit <- fit_bfr(simulated_data, method = "mle")
+# Fit the model to create a 'bfr' object
+bfr_fit <- fit_bfr(simulated_data, method = "qe")
 
-# 3. Generate the Pearson-like SK_G x KU_M diagram
-plot(bfr_fit, B = 500, conf = c(0.90, 0.95), seed = 123)
+# Generate the Pearson-like SK_G x KU_M diagram
+plot(bfr_fit, type = "diagnostic", B = 500, conf = c(0.90, 0.95), seed = 123)
+
+# Generate the fitted density curve over the empirical histogram
+plot(bfr_fit, type = "density")
 }
 
 }
