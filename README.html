@@ -352,17 +352,25 @@ display: none;
 </div>
 
 
+<p><strong>Status:</strong> Active / Submitted for DATA 501<br />
+<strong>Funding:</strong> This project was developed as academic
+coursework for DATA 501 at Victoria University of Wellington. No
+external funding was received.</p>
 <div id="bfrdist-the-bfr-distribution-for-bounded-measurements" class="section level1">
 <h1>BFRdist: The BFR Distribution for Bounded Measurements</h1>
 <p><strong>DATA501 Software Package</strong><br />
 <strong>Authors:</strong> Daniel Luo and Jennifer Hanna<br />
 <strong>Supervisor:</strong> Alejandro Frery</p>
 <p>The <code>BFRdist</code> package provides a robust computational
-environment for the BFR distribution, an analytically tractable model
-designed for double-bounded data confined to the unit interval <span class="math inline">\((0, 1)\)</span>. It overcomes the limitations of
-traditional bounded models (like the Beta and Kumaraswamy distributions)
-and is highly adaptable for analyzing proportions, entropy, and remote
-sensing metrics like the Generalized Radar Vegetation Index (GRVI).</p>
+environment for the novel BFR distribution, an analytically tractable
+model designed for double-bounded data confined to the unit interval
+<span class="math inline">\((0, 1)\)</span>. The BFR distribution, named
+after the authors of its foundational paper, Avik Bhattacharya,
+Alejandro C. Frery, and Andrea A. Rey, narrows the gap between the
+limitations of trading flexibility for analytic convenience in
+traditional bounded models (Beta and Kumaraswamy distributions) and is
+highly adaptable for analyzing proportions, entropy, and remote sensing
+metrics like the Generalized Radar Vegetation Index (GRVI).</p>
 <div id="key-features" class="section level2">
 <h2>Key Features</h2>
 <ul>
@@ -372,11 +380,11 @@ sensing metrics like the Generalized Radar Vegetation Index (GRVI).</p>
 cumulative distribution, quantiles, and random generation.</li>
 <li><strong>High-Performance Estimation:</strong> Fast parameter
 estimation utilizing a compiled C++ backend (<code>Rcpp</code>),
-accessible via <code>fit_bfr()</code> using Maximum Likelihood
-Estimation (MLE) or Method of Moments (MME). By utilizing compiled C++
-code for these intensive mathematical iterations, the package avoids R’s
-native memory overhead and significantly reduces computation time when
-working with large datasets.</li>
+accessible via <code>fit_bfr()</code> using Quantile Estimation (QE) or
+Maximum Likelihood Estimation (MLE). By utilizing compiled C++ code for
+these intensive mathematical iterations, the package avoids R’s native
+memory overhead and significantly reduces computation time when working
+with large datasets.</li>
 <li><strong>Statistical Utilities:</strong> Robust, order
 statistic-based measures of asymmetry and tail heaviness
 (<code>galton_skewness()</code>, <code>moors_kurtosis()</code>).</li>
@@ -395,19 +403,25 @@ diagrams.</li>
 directly from our GitHub repository using the <code>pak</code> package.
 Because the package sits in a subdirectory of the main repository, use
 the following command:</p>
+<p><strong>Note for Windows/macOS users:</strong> Because
+<code>BFRdist</code> compiles C++ code during installation, Windows
+users must have Rtools installed. macOS users may need to install Xcode
+Command Line Tools by running <code>xcode-select --install</code> in
+their terminal.</p>
 <pre class="r"><code># Install pak if you haven&#39;t already
 # install.packages(&quot;pak&quot;)
 
 # Install BFRdist from the repository subdirectory
+options(pkg.build_vignettes = TRUE)
 pak::pak(&quot;luodani272/DATA501/BFRdist&quot;)</code></pre>
 </div>
 <div id="for-package-developers" class="section level3">
 <h3>For Package Developers</h3>
 <p>If you want to modify the source code or build the package locally,
 clone the repository and use <code>devtools</code>:</p>
-<pre class="bash"><code># 1. Clone the repository in your terminal
+<pre class="bash"><code># Clone the repository in your terminal
 git clone [https://github.com/luodani272/DATA501.git](https://github.com/luodani272/DATA501.git)</code></pre>
-<pre class="r"><code># 2. Open the BFRdist project in RStudio, then run:
+<pre class="r"><code># Open the BFRdist project in RStudio, then run:
 install.packages(&quot;devtools&quot;)
 Rcpp::compileAttributes() # Re-compile C++ code if modified
 devtools::load_all()      # Load the package into your session
@@ -419,21 +433,32 @@ devtools::document()      # Update roxygen2 documentation</code></pre>
 <h2>Quick Start Example</h2>
 <pre class="r"><code>library(BFRdist)
 
-# Generate 500 synthetic observations between 0 and 1
-set.seed(123)
-synthetic_data &lt;- rbfr(n = 500, alpha = 2.0, beta = 3.5)
+# Load the built-in multi-temporal agricultural dataset (Bhattacharya et al., 2026)
+data(grvi_data)
 
-# Fit the BFR distribution using Maximum Likelihood Estimation
-bfr_model &lt;- fit_bfr(synthetic_data, method = &quot;mle&quot;)
+# Extract early-season June 6th GRVI for Soybeans 
+soy_june &lt;- grvi_data$GRVI_06Jun[grvi_data$Crop == &quot;Soybeans&quot;]
+
+# Filter strictly to (0, 1) to satisfy BFR constraints
+soy_clean &lt;- soy_june[soy_june &gt; 0 &amp; soy_june &lt; 1]
+
+# Fit the BFR distribution using Quantile Estimation (QE) or Maximum Likelihood Estimation (MLE)
+bfr_model_qe &lt;- fit_bfr(soy_clean, method = &quot;qe&quot;)
+bfr_model_mle &lt;- fit_bfr(soy_clean, method = &quot;mle&quot;)
 
 # View a clean summary of the parameter estimates
-print(bfr_model)
+print(bfr_model_qe)
+print(bfr_model_mle)
 
 # View standard errors and goodness-of-fit metrics (Log-Likelihood, AIC, BIC)
-summary(bfr_model)
+summary(bfr_model_qe)
+summary(bfr_model_mle)
 
 # Generate a diagnostic plot with confidence ellipses
-plot(bfr_model)</code></pre>
+plot(bfr_model_qe)
+
+# Generate the fitted density curve over the empirical histogram
+plot(bfr_model_qe, type = &quot;density&quot;)</code></pre>
 </div>
 <div id="input-and-output-specifications" class="section level2">
 <h2>Input and Output Specifications</h2>
@@ -448,33 +473,117 @@ a custom <code>bfr</code> S3 object containing:
 <ul>
 <li>Estimated <code>alpha</code> and <code>beta</code> parameters.</li>
 <li>The raw data vector.</li>
-<li>The estimation method used (<code>mle</code> or
+<li>The estimation method used (<code>qe</code> or
 <code>mme</code>).</li>
 <li>Goodness-of-fit metrics (Log-Likelihood, AIC, BIC).</li>
 </ul></li>
 </ul>
 </div>
-<div id="limitations" class="section level2">
-<h2>Limitations</h2>
+<div id="computational-platform-reproducibility" class="section level2">
+<h2>Computational Platform &amp; Reproducibility</h2>
+<p>To ensure full reproducibility and replicability of the models and
+stochastic simulations (such as the parametric bootstrap confidence
+ellipses), this package was developed and tested on the following
+computational platform:</p>
 <ul>
-<li>The package requires data strictly strictly within <span class="math inline">\((0, 1)\)</span>. For datasets containing exact
-<span class="math inline">\(0\)</span>s or <span class="math inline">\(1\)</span>s (e.g., zero-inflated proportions), a
-transformation or a zero-inflated mixture model is required before using
-<code>BFRdist</code>.</li>
-<li>The Method of Moments (MME) estimator relies on sample quartiles,
-which may be sensitive to extreme sparsity in very small sample
-sizes.</li>
+<li><strong>Operating System:</strong> Windows 11 x64 (build 26200)</li>
+<li><strong>Architecture:</strong> x86_64-w64-mingw32 / x64</li>
+<li><strong>R Version:</strong> 4.6.1 (2026-06-24 ucrt)</li>
+<li><strong>IDE:</strong> RStudio 2026.10.0.233</li>
+<li><strong>C++ Backend:</strong> <code>Rcpp</code> version 1.1.2</li>
+<li><strong>Random Number Generation (RNG):</strong>
+<code>Mersenne-Twister</code> algorithm (Inversion and Rejection
+methods).</li>
 </ul>
+<p><strong>Note on Stochastic Simulation:</strong> Any functions relying
+on random generation (such as <code>rbfr()</code> or the bootstrap
+replications in <code>plot.bfr()</code>) require a user-defined seed
+(e.g., <code>set.seed(123)</code>) prior to execution to guarantee
+exactly reproducible outputs.</p>
+<p><strong>Note on Open Data:</strong> To comply with open data
+standards, the built-in <code>grvi_data</code> dataset originates from
+standard, machine-readable CSV files, avoiding proprietary formats like
+Excel.</p>
+<p><strong>Note on File Structure</strong> Following the reproducible
+research framework by Frery et al. (2020), this package centralizes raw
+project artifacts, datasets, and documentation within the
+<code>inst/</code> directory to facilitate comprehensive review and
+evaluation. Specifically:</p>
+<ul>
+<li><p><strong><code>inst/extdata/csv/</code></strong>: Houses the raw,
+machine-readable CSV datasets.</p></li>
+<li><p><strong><code>inst/figures/</code></strong>: Contains raw design
+artifacts and vector schematics (such as Draw.io source files).</p></li>
+<li><p><strong><code>inst/images/</code></strong>: Stores supplementary
+visual assets.</p></li>
+<li><p><strong><code>inst/text/</code></strong>: Contains auxiliary
+project reports and documentation.</p></li>
+</ul>
+</div>
+<div id="unit-testing" class="section level2">
+<h2>Unit Testing</h2>
+<p>This package includes a comprehensive suite of automated unit tests
+using the <code>testthat</code> framework to verify mathematical
+boundaries (e.g., ensuring CDF bounds are exactly 0 to 1) and confirm
+C++ estimator accuracy.</p>
+<p>To run the test suite locally, clone the repository and execute:</p>
+<pre class="r"><code>devtools::test()</code></pre>
 </div>
 <div id="documentation" class="section level2">
 <h2>Documentation</h2>
 <p>For a comprehensive theoretical overview and mathematical
 formulation, please read the package vignette:</p>
-<pre class="r"><code>vignette(&quot;Introduction_to_BFRdist&quot;, package = &quot;BFRdist&quot;)</code></pre>
+<pre class="r"><code>vignette(&quot;intro-to-bfr&quot;, package = &quot;BFRdist&quot;)</code></pre>
+</div>
+<div id="known-limitations" class="section level2">
+<h2>Known Limitations</h2>
+<p>These are expected behaviors based on the mathematical formulation of
+the BFR distribution:</p>
+<ul>
+<li><strong>Strict Unit Interval:</strong> The BFR distribution is
+defined strictly on the open interval <span class="math inline">\((0,
+1)\)</span>. Field data (like GRVI or proportions) containing exact
+<code>0</code> or <code>1</code> boundaries must be filtered or adjusted
+prior to fitting, otherwise <code>fit_bfr()</code> will throw an
+out-of-bounds error.</li>
+<li><strong>MLE Computation Time:</strong> While the C++ quantile
+estimator is near-instantaneous, Maximum Likelihood Estimation (MLE)
+utilizes <code>stats::optim()</code> to iteratively traverse the
+log-likelihood surface. For extremely large multitemporal datasets, MLE
+will take noticeably longer to converge. This method is intentionally
+included to allow for direct baseline comparisons and for scenarios
+where traditional statistical precision is prioritized over execution
+speed.</li>
+</ul>
+</div>
+<div id="bug-reports" class="section level2">
+<h2>Bug Reports</h2>
+<p>If you encounter any issues or have feature requests, please open an
+issue on our <a href="https://github.com/luodani272/DATA501/issues">GitHub Issues
+page</a>.</p>
+</div>
+<div id="citing-the-package" class="section level2">
+<h2>Citing the Package</h2>
+<p>To cite the BFRdist package in publications, please use:</p>
+<pre class="r"><code>citation(&quot;BFRdist&quot;)</code></pre>
 </div>
 <div id="licence" class="section level2">
 <h2>Licence</h2>
 <p>This package is released under the MIT License.</p>
+</div>
+<div id="references" class="section level2">
+<h2>References</h2>
+<ul>
+<li>Bhattacharya, A., Frery, A. C., &amp; Rey, A. A. (2026). A
+Statistical Framework for Bounded Measurements with Applications to SAR
+Data. <em>IEEE Transactions on Geoscience and Remote Sensing</em>.</li>
+<li>Bhattacharya, A., Frery, A. C., &amp; Rey, A. A. (2026). GRVI data.
+Personal communication (October).</li>
+<li>Frery, A. C., Gomez, L., &amp; Medeiros, A. C. (2020). A Badging
+System for Reproducibility and Replicability in Remote Sensing Research.
+<em>IEEE Journal of Selected Topics on Applied Earth Observations and
+Remote Sensing</em>, 13, 4988-4995. <a href="https://doi.org/10.1109/JSTARS.2020.3019418" class="uri">https://doi.org/10.1109/JSTARS.2020.3019418</a></li>
+</ul>
 </div>
 </div>
 

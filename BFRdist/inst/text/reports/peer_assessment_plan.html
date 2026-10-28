@@ -352,23 +352,26 @@ display: none;
 </div>
 
 
+<p><strong>Status:</strong> Active / Submitted for DATA 501<br />
+<strong>Funding:</strong> This project was developed as academic
+coursework for DATA 501 at Victoria University of Wellington. No
+external funding was received.</p>
 <div id="peer-assessment-plan-bfrdist-package" class="section level1">
 <h1>Peer Assessment Plan: BFRdist Package</h1>
 <div id="repository-link-and-installation-instructions" class="section level2">
 <h2>1. Repository Link and Installation Instructions</h2>
-<p>The <code>BFRdist</code> package is hosted on GitHub and contains a
+<p>The <code>BFRdist</code> package is hosted on <a href="https://github.com/luodani272/DATA501">GitHub</a> and contains a
 frozen release ready for peer review. Because the package uses a
 compiled C++ backend, Windows users will need to have <a href="https://cran.r-project.org/bin/windows/Rtools/">Rtools</a>
 installed.</p>
 <p>To install and load the package, please run the following commands in
-your R console using the <code>remotes</code> package. Be sure to
-include <code>build_vignettes = TRUE</code> so you can view the package
-documentation locally.</p>
-<pre class="r"><code># Install the remotes package if you do not already have it
-install.packages(&quot;remotes&quot;)
+your R console using the <code>pak</code> package.</p>
+<pre class="r"><code># Install pak if you haven&#39;t already
+# install.packages(&quot;pak&quot;)
 
-# Install the BFRdist package directly from the GitHub repository
-remotes::install_github(&quot;luodani272/DATA501&quot;, subdir = &quot;BFRdist&quot;, build_vignettes = TRUE)
+# Install BFRdist from the repository subdirectory
+options(pkg.build_vignettes = TRUE)
+pak::pak(&quot;luodani272/DATA501/BFRdist&quot;)
 
 # Load the package
 library(BFRdist)</code></pre>
@@ -383,24 +386,28 @@ and S3 object-oriented methods are fully implemented:</p>
 <li><strong>Core Distribution Suite:</strong> <code>dbfr()</code>
 (density), <code>pbfr()</code> (cumulative probability),
 <code>qbfr()</code> (quantiles), and <code>rbfr()</code> (random
-generation).</li>
+generation) (Bhattacharya et al., 2026).</li>
 <li><strong>Summary Statistics:</strong> <code>galton_skewness()</code>
 and <code>moors_kurtosis()</code> calculate robust, order
 statistic-based measures of asymmetry and tail heaviness.</li>
 <li><strong>Parameter Estimation:</strong> <code>fit_bfr()</code>
 estimates shape parameters from empirical data. It utilizes a fast C++
 backend (<code>estimateBFR_cpp</code>) for initial estimations and
-supports both Maximum Likelihood Estimation (MLE) and the Method of
-Moments (MME).</li>
+supports both Quantile Estimation (QE) and Maximum Likelihood Estimation
+(MLE).</li>
 <li><strong>S3 Object-Oriented Ecosystem:</strong>
 <code>fit_bfr()</code> returns a custom <code>bfr</code> object. This
-object is supported by <code>summary.bfr()</code> (for standard errors
-and goodness-of-fit metrics), <code>predict.bfr()</code>, and
+object is supported by <code>print.bfr()</code> (for estimated
+parameters), <code>summary.bfr()</code> (for standard errors and
+goodness-of-fit metrics), <code>predict.bfr()</code>, and
 <code>plot.bfr()</code>.</li>
 <li><strong>Diagnostic Plotting:</strong> The <code>plot.bfr()</code>
 method simulates parametric bootstrap replications to generate a
 diagnostic Pearson-like <span class="math inline">\(SK_G \times
-KU_M\)</span> diagram with bivariate normal confidence ellipses.</li>
+KU_M\)</span> diagram with bivariate normal confidence ellipses.
+Additionally, using the non-default <code>type = &quot;density&quot;</code>
+argument generates an empirical histogram overlaid with the theoretical
+fitted density curve (Bhattacharya et al., 2026).</li>
 </ul>
 </div>
 <div id="package-testing-plan" class="section level2">
@@ -413,24 +420,25 @@ expected output so you can easily verify correctness.</p>
 <ol style="list-style-type: decimal">
 <li><p>Check that the Roxygen2 help files load correctly in the RStudio
 help pane:</p>
-<pre class="r"><code>?fit_bfr
-?plot.bfr</code></pre></li>
-<li><p>Verify the documentation code executes properly:</p>
-<pre class="r"><code>example(fit_bfr)</code></pre></li>
+<pre class="r"><code>help(package = &quot;BFRdist&quot;)</code></pre></li>
 <li><p>Read the compiled introductory vignette detailing the
 mathematical formulation:</p>
 <pre class="r"><code>browseVignettes(&quot;BFRdist&quot;)</code></pre></li>
 </ol>
 </div>
-<div id="step-b-run-automated-package-tests" class="section level3">
-<h3>Step B: Run Automated Package Tests</h3>
-<p>If you clone the repository locally, you can run our full suite of
-automated unit tests and CRAN checks using <code>devtools</code>.</p>
+<div id="step-b-run-automated-package-tests-requires-local-clone" class="section level3">
+<h3>Step B: Run Automated Package Tests (Requires Local Clone)</h3>
+<p>To run the full suite of automated unit tests and CRAN checks, clone
+the repository locally so <code>devtools</code> can access the raw
+source code.</p>
 <pre class="r"><code>devtools::test()
 # Expected: [ FAIL 0 | WARN 0 | SKIP 0 | PASS 61 ] (or similar high pass count)
 
 devtools::check()
-# Expected: 0 errors | 0 warnings | 0 notes</code></pre>
+# Expected: 0 errors | 0 warnings | 0 notes
+
+# Verify the documentation code executes properly: 
+devtools::run_examples()</code></pre>
 </div>
 <div id="step-c-verify-core-functions-math-consistency" class="section level3">
 <h3>Step C: Verify Core Functions &amp; Math Consistency</h3>
@@ -439,9 +447,13 @@ and verify their mathematical integrity:</p>
 <pre class="r"><code>alpha_val &lt;- 1.5
 beta_val &lt;- 2.0
 
-# 1. Test Math Consistency (Inverse functions)
-qbfr(pbfr(c(0.1, 0.5, 0.9), alpha = alpha_val, beta = beta_val), alpha = alpha_val, beta = beta_val)
-# Expected: 0.1 0.5 0.9
+# 1. Test Math Consistency (Inverse functions via LRE)
+p_true &lt;- c(0.1, 0.5, 0.9)
+p_computed &lt;- qbfr(pbfr(p_true, alpha = alpha_val, beta = beta_val), alpha = alpha_val, beta = beta_val)
+
+lre_inverse &lt;- -log10(abs(p_computed - p_true) / p_true + 1e-16)
+all(lre_inverse &gt; 5)
+# Expected: TRUE (maintains &gt; 5 significant digits of precision through the round-trip calculation)
 
 # 2. Test Density Integration (Total area under the curve must be 1)
 integral_result &lt;- integrate(function(x) dbfr(x, alpha_val, beta_val), lower = 0, upper = 1)
@@ -460,7 +472,15 @@ all(lre &gt; 5)
 set.seed(123)
 synthetic_data &lt;- rbfr(500, alpha = alpha_val, beta = beta_val)
 range(synthetic_data) 
-# Expected: Two values strictly between 0 and 1 (e.g., 0.017... 0.956...)</code></pre>
+# Expected: Two values strictly between 0 and 1 (e.g., 0.017... 0.956...)
+
+# 5. Test Real-World Data Loading &amp; Boundary Filtering (Bhattacharya et al., 2026)
+data(&quot;grvi_data&quot;, package = &quot;BFRdist&quot;)
+canola_july &lt;- grvi_data$GRVI_24_july[grvi_data$Crop == &quot;Canola&quot;]
+canola_clean &lt;- canola_july[canola_july &gt; 0 &amp; canola_july &lt; 1]
+
+length(canola_clean) &gt; 0
+# Expected: TRUE (confirms dataset loads and filters successfully for BFR fitting)</code></pre>
 </div>
 <div id="step-d-computational-efficiency-benchmarking" class="section level3">
 <h3>Step D: Computational Efficiency (Benchmarking)</h3>
@@ -482,16 +502,32 @@ microbenchmark(
 <h3>Step E: Verify S3 Methods and OOP Implementation</h3>
 <p>Test the primary modeling function and ensure the resulting S3 object
 triggers the correct generic methods:</p>
-<pre class="r"><code>model_fit &lt;- fit_bfr(synthetic_data, method = &quot;mle&quot;)
+<pre class="r"><code># Fit the data using both available estimators
+model_fit_qe &lt;- fit_bfr(synthetic_data, method = &quot;qe&quot;)
+model_fit_mle &lt;- fit_bfr(synthetic_data, method = &quot;mle&quot;)
 
-summary(model_fit)
-# Expected: Console output showing &quot;BFR Distribution Fit Summary&quot; with Log-Likelihood, AIC, and Standard Errors.
+# 1. Verify the basic print methods
+print(model_fit_qe)
+print(model_fit_mle)
+# Expected: Console output titled &quot;BFR Distribution Fit&quot; displaying the estimation method and parameter estimates.
 
-predict(model_fit, n.ahead = 5)
+# 2. Verify the summary methods (Note the differences in output)
+summary(model_fit_qe)
+# Expected: &quot;BFR Distribution Fit Summary&quot; showing the Log-Likelihood (Standard Errors will be NA, and AIC/BIC are omitted).
+
+summary(model_fit_mle)
+# Expected: &quot;BFR Distribution Fit Summary&quot; showing the Log-Likelihood, full AIC/BIC metrics, and calculated Standard Errors.
+
+# 3. Verify the predict method
+predict(model_fit_qe, n.ahead = 5)
 # Expected: A numeric vector of 5 values, strictly between 0 and 1.
 
-plot(model_fit)
-# Expected: A scatterplot titled &quot;BFR Bootstrap SK_G x KU_M Plot&quot; with 90% and 95% confidence ellipses.</code></pre>
+# 4. Verify the plot methods
+plot(model_fit_qe)
+# Expected: A scatterplot titled &quot;BFR Bootstrap SK_G x KU_M Plot&quot; with 90% and 95% confidence ellipses.
+
+plot(model_fit_qe, type = &quot;density&quot;)
+# Expected: An empirical histogram overlaid with the fitted theoretical BFR probability density curve.</code></pre>
 </div>
 <div id="step-f-injecting-errors-breaking-the-functions" class="section level3">
 <h3>Step F: Injecting Errors (Breaking the Functions)</h3>
@@ -500,7 +536,7 @@ following errors. The package should stop execution and return clear
 warning/error messages.</p>
 <pre class="r"><code># 1. Out-of-Bounds Data (Negative values or &gt;= 1)
 fit_bfr(c(0.2, 0.5, -0.3, 0.8), method = &quot;mle&quot;)
-# Expected Error: &quot;All observations must be strictly between 0 and 1.&quot;
+# Expected Error: &quot;All input data must be strictly greater than 0 and less than 1&quot;
 
 # 2. Invalid Shape Parameters
 dbfr(0.5, alpha = -1, beta = 2)
@@ -511,7 +547,7 @@ qbfr(1.5, alpha = 1.5, beta = 2)
 # Expected Error: &quot;Probabilities p must be strictly greater than 0 and less than 1.&quot;
 
 # 4. Invalid Prediction Length
-predict(model_fit, n.ahead = 0)
+predict(model_fit_qe, n.ahead = 0)
 # Expected Error: &quot;n.ahead must be at least 1.&quot;
 
 # 5. Zero Variance Data (flat line)
@@ -520,11 +556,22 @@ fit_bfr(rep(0.5, 10))
 
 # 6. Data Type Errors (Text instead of numeric)
 fit_bfr(c(&quot;a&quot;, &quot;b&quot;, &quot;c&quot;))
-# Expected Error: &quot;x must be a numeric vector.&quot;
+# Expected Error: &quot;All input data must be strictly greater than 0 and less than 1.&quot;
 
 # 7. Invalid Method Argument
 fit_bfr(synthetic_data, method = &quot;bayesian&quot;)
-# Expected Error: &quot;&#39;arg&#39; should be one of “mle”, “mme”&quot;</code></pre>
+# Expected Error: &quot;&#39;arg&#39; should be one of “mle”, “qe”&quot;
+
+# 8. NA and Infinity Rejection
+dbfr(c(0.5, NA, Inf), alpha = 1.5, beta = 2.0)
+# Expected Error: &quot;NA and Inf values are not permitted&quot;
+
+# 9. Missing Value Handling in Statistics
+galton_skewness(c(0.2, 0.5, 0.8, NA), na.rm = TRUE)
+# Expected: [1] 0 (Successfully calculates the skewness by ignoring the NA)
+
+moors_kurtosis(c(0.2, 0.5, 0.8, NA), na.rm = TRUE)
+# Expected: [1] 1 (Successfully calculates the kurtosis by ignoring the NA)</code></pre>
 </div>
 </div>
 <div id="known-limitations" class="section level2">
@@ -542,7 +589,20 @@ out-of-bounds error.</li>
 estimator is near-instantaneous, Maximum Likelihood Estimation (MLE)
 utilizes <code>stats::optim()</code> to iteratively traverse the
 log-likelihood surface. For extremely large multitemporal datasets, MLE
-will take noticeably longer to converge.</li>
+will take noticeably longer to converge. This method is intentionally
+included to allow for direct baseline comparisons and for scenarios
+where traditional statistical precision is prioritized over execution
+speed.</li>
+</ul>
+</div>
+<div id="references" class="section level2">
+<h2>5. References</h2>
+<ul>
+<li>Bhattacharya, A., Frery, A. C., &amp; Rey, A. A. (2026). A
+Statistical Framework for Bounded Measurements with Applications to SAR
+Data. <em>IEEE Transactions on Geoscience and Remote Sensing</em>.</li>
+<li>Bhattacharya, A., Frery, A. C., &amp; Rey, A. A. (2026). GRVI data.
+Personal communication (October).</li>
 </ul>
 </div>
 </div>

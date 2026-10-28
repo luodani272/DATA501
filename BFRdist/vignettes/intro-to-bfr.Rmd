@@ -12,8 +12,10 @@ vignette: >
   %\VignetteKeyword{Galton skewness}
   %\VignetteKeyword{Moors kurtosis}
 ---
+**Status:** Active / Submitted for DATA 501  
+**Funding:** This project was developed as academic coursework for DATA 501 at Victoria University of Wellington. No external funding was received.
 
-The `BFRdist` package provides computational and visual tools for the novel BFR distribution, an expressive and analytically tractable model for double-bounded data measurements strictly confined to the unit interval $(0,1)$, or data scaled to this range. Named after the authors of its foundational paper, Avik Bhattacharya, Alejandro C. Frery, and Andrea A. Rey [@bhattacharya2024], the BFR distribution was developed to overcome the limitations of traditional bounded models like the Beta and Kumaraswamy distributions, which often force researchers to trade flexibility for analytical convenience.
+The `BFRdist` package provides computational and visual tools for the novel BFR distribution, an expressive and analytically tractable model for double-bounded data measurements strictly confined to the unit interval $(0,1)$, or data scaled to this range. Named after the authors of its foundational paper, Avik Bhattacharya, Alejandro C. Frery, and Andrea A. Rey (Bhattacharya et al., 2026), the BFR distribution was developed to overcome the limitations of traditional bounded models like the Beta and Kumaraswamy distributions, which often force researchers to trade flexibility for analytical convenience.
 
 Its mathematical versatility makes it highly adaptable for a wide variety of bounded measurements, including proportions, phase, and entropy. To support this, `BFRdist` provides a domain-agnostic computational environment encompassing standard probability functions, high-performance parameter estimation, and object-oriented diagnostic tools:   
 
@@ -108,7 +110,7 @@ With the model validated, we can apply it to empirical field measurements. The `
 Because the BFR distribution is defined strictly on the open unit interval $(0, 1)$, we must filter out any exact `0` or `1` boundaries before fitting the model.
 
 ```{r real-data}
-# Load the real dataset
+# Load the real dataset (Bhattacharya et al., 2026)
 data("grvi_data", package = "BFRdist")
 
 # Extract early-season June 6th GRVI for Soybeans
@@ -148,7 +150,14 @@ plot(real_model_qe)
 plot(real_model_qe, type = "density")
 ```
 
-## 5. Conclusion and Acknowledgments
+## 5. Known Limitations
+
+These are expected behaviors based on the mathematical formulation of the BFR distribution:
+
+* **Strict Unit Interval:** The BFR distribution is defined strictly on the open interval $(0, 1)$. Field data (like GRVI or proportions) containing exact `0` or `1` boundaries must be filtered or adjusted prior to fitting, otherwise `fit_bfr()` will throw an out-of-bounds error.
+* **MLE Computation Time:** While the C++ quantile estimator is near-instantaneous, Maximum Likelihood Estimation (MLE) utilizes `stats::optim()` to iteratively traverse the log-likelihood surface. For extremely large multitemporal datasets, MLE will take noticeably longer to converge. This method is intentionally included to allow for direct baseline comparisons and for scenarios where traditional statistical precision is prioritized over execution speed.
+
+## 6. Conclusion and Acknowledgments
 
 The `BFRdist` package provides a robust, high-performance computational framework for modeling bounded measurements. By bridging analytical flexibility with computational scalability, `BFRdist` addresses key limitations of traditional bounded models like the Beta and Kumaraswamy distributions:
 
