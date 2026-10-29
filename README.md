@@ -8,6 +8,7 @@
 **Supervisor:** Alejandro Frery  
 
 The `BFRdist` package provides a robust computational environment for the novel BFR distribution, an  analytically tractable model designed for double-bounded data confined to the unit interval $(0, 1)$. The BFR distribution, named after the authors of its foundational paper, Avik Bhattacharya, Alejandro C. Frery, and Andrea A. Rey, narrows the gap between the limitations of trading flexibility for analytic convenience in traditional bounded models (Beta and Kumaraswamy distributions) and is highly adaptable for analyzing proportions, entropy, and remote sensing metrics like the Generalized Radar Vegetation Index (GRVI).
+Reports are in the BFRDist/inst/text/reports directory.
 
 ## Key Features
 
